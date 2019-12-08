@@ -13,8 +13,11 @@
         <module>hui-common-model</module>
         <module>hui-common-autoreport</module>
         <module>hui-common-hadoop</module>
-        <module>hui-common-http</module>
         <module>hui-common-codegen</module>
+        <module>hui-common-dao</module>
+        <module>hui-common-spark</module>
+        <module>hui-common-redis</module>
+        <module>hui-common-es</module>
     </modules>
 
 

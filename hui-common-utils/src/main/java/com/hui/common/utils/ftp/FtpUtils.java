@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * <b><code>FtpUtil</code></b>
  * <p/>
- * Description: 并发量不大。简单工具类抓文件。支持多线程并发巨大的工具根据项目情况后补。
+ * Description:
  * <p/>
  * <b>Creation Time:</b> 2018/12/5 11:59.
  *
@@ -147,24 +147,19 @@ public class FtpUtils {
      * @author : Hu weihui
      * @since hui-project
      */
-    public static void batchUpload(FTPClient ftpClient, String srcPath, String destPath) {
-        try {
-            ftpClient.setBufferSize(BUFFER_SIZE);
-            ftpClient.setControlEncoding(CHARSET_UTF8);
-            enterDir(ftpClient, destPath);
-            checkDirExist(srcPath);
-            //读取源路径
-            File file = new File(srcPath);
-            //获取下面所有文件（不递归）
-            File[] files = file.listFiles();
-            for (File sourceFile : files) {
-                try (FileInputStream fileInputStream = new FileInputStream(sourceFile)) {
-                    ftpClient.storeFile(new String(destPath.getBytes(localCharset), serverCharset), fileInputStream);
-                }
+    public static void batchUpload(FTPClient ftpClient, String srcPath, String destPath) throws IOException {
+        ftpClient.setBufferSize(BUFFER_SIZE);
+        ftpClient.setControlEncoding(CHARSET_UTF8);
+        enterDir(ftpClient, destPath);
+        checkDirExist(srcPath);
+        //读取源路径
+        File file = new File(srcPath);
+        //获取下面所有文件（不递归）
+        File[] files = file.listFiles();
+        for (File sourceFile : files) {
+            try (FileInputStream fileInputStream = new FileInputStream(sourceFile)) {
+                ftpClient.storeFile(new String(destPath.getBytes(localCharset), serverCharset), fileInputStream);
             }
-        } catch (IOException e) {
-
-            throw new RuntimeException("ftp batch upload files fail !!!");
         }
     }
 
@@ -176,20 +171,16 @@ public class FtpUtils {
      * @author : Hu weihui
      * @since hui-project
      */
-    public static void batchDelete(FTPClient ftpClient, String destPath) {
-        try {
-            enterDir(ftpClient, destPath);
+    public static void batchDelete(FTPClient ftpClient, String destPath) throws IOException {
+        enterDir(ftpClient, destPath);
 
-            String[] fileNames = ftpClient.listNames(destPath);
+        String[] fileNames = ftpClient.listNames(destPath);
 
-            for (String fileName : fileNames) {
-                String destFilePath = destPath + File.separator + fileName;
-                ftpClient.deleteFile(destFilePath);
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("ftp batch delete files fail !!!");
+        for (String fileName : fileNames) {
+            String destFilePath = destPath + File.separator + fileName;
+            ftpClient.deleteFile(destFilePath);
         }
+
     }
 
     /**
@@ -199,18 +190,13 @@ public class FtpUtils {
      * @param destPath
      * @param fileName
      */
-    public static void delete(FTPClient ftpClient, String destPath, String fileName) {
-        try {
-            enterDir(ftpClient, destPath);
+    public static void delete(FTPClient ftpClient, String destPath, String fileName) throws IOException {
+        enterDir(ftpClient, destPath);
 
-            String destFilePath = destPath + File.separator + fileName;
+        String destFilePath = destPath + File.separator + fileName;
 
-            ftpClient.deleteFile(destFilePath);
+        ftpClient.deleteFile(destFilePath);
 
-        } catch (IOException e) {
-
-            throw new RuntimeException("ftp delete file fail !!!");
-        }
     }
 
     /**
@@ -249,21 +235,16 @@ public class FtpUtils {
      * @author : Hu weihui
      * @since hui-project
      */
-    public static void move(FTPClient ftpClient, String srcPath, String fileName, String destPath) {
-        try {
-            String[] ftpFiles = ftpClient.listNames();
-            //批量移动文件到目标目录
-            for (String ftpFile : ftpFiles) {
-                String ftpFileName = new String(ftpFile.getBytes(serverCharset), localCharset);
-                if (ftpFileName.equals(fileName)) {
-                    String srcFilePath = srcPath + File.separator + ftpFileName;
-                    String destFilePath = destPath + File.separator + ftpFileName;
-                    ftpClient.rename(srcFilePath, destFilePath);
-                }
+    public static void move(FTPClient ftpClient, String srcPath, String fileName, String destPath) throws IOException {
+        String[] ftpFiles = ftpClient.listNames();
+        //批量移动文件到目标目录
+        for (String ftpFile : ftpFiles) {
+            String ftpFileName = new String(ftpFile.getBytes(serverCharset), localCharset);
+            if (ftpFileName.equals(fileName)) {
+                String srcFilePath = srcPath + File.separator + ftpFileName;
+                String destFilePath = destPath + File.separator + ftpFileName;
+                ftpClient.rename(srcFilePath, destFilePath);
             }
-        } catch (IOException e) {
-
-            throw new RuntimeException("ftp move files fail !!!");
         }
     }
 
@@ -278,25 +259,20 @@ public class FtpUtils {
      * @author : Hu weihui
      * @since hui-project
      */
-    public static FTPClient login(String host, Integer port, String userName, String password) {
+    public static FTPClient login(String host, Integer port, String userName, String password) throws IOException {
         FTPClient ftpClient = new FTPClient();
-        try {
-            ftpClient.connect(host, port);
-            ftpClient.login(userName, password);
-            int replyCode = ftpClient.getReplyCode();
-            if (FTPReply.isPositivePreliminary(replyCode)) {
-
-                close(ftpClient);
-                throw new RuntimeException("FTP connect fail");
-            }
-            // 设置文件下载为二进制模式
-            ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
-            //设置编码
-            setEncode(ftpClient);
-            ftpClient.enterLocalPassiveMode();  // 设置被动模式，开通一个端口来传输数据
-        } catch (IOException e) {
-            throw new RuntimeException("FTP login fail");
+        ftpClient.connect(host, port);
+        ftpClient.login(userName, password);
+        int replyCode = ftpClient.getReplyCode();
+        if (FTPReply.isPositivePreliminary(replyCode)) {
+            close(ftpClient);
+            throw new RuntimeException("FTP connect fail");
         }
+        // 设置文件下载为二进制模式
+        ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+        //设置编码
+        setEncode(ftpClient);
+        ftpClient.enterLocalPassiveMode();  // 设置被动模式，开通一个端口来传输数据
         return ftpClient;
     }
 
@@ -344,8 +320,7 @@ public class FtpUtils {
      */
     private static void enterDir(FTPClient ftpClient, String dirPath) throws IOException {
         if (!ftpClient.changeWorkingDirectory(dirPath)) {
-
-            throw new RuntimeException("FTP download file fail !!!");
+            throw new IOException("FTP enter to dirPath " + dirPath + " fail !!!");
         }
     }
 

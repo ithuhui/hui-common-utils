@@ -1,4 +1,4 @@
-package com.hui.common.http;
+package com.hui.common.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Interceptor;
@@ -17,12 +17,12 @@ import java.io.IOException;
  * @author Gary.Hu
  */
 @Slf4j
-public class RetryIntercepter implements Interceptor {
+public class RetryInterceptor implements Interceptor {
 
     public int maxRetry = 3;
     private int retryNum = 0;
 
-    public RetryIntercepter(int maxRetry) {
+    public RetryInterceptor(int maxRetry) {
         this.maxRetry = maxRetry;
     }
 

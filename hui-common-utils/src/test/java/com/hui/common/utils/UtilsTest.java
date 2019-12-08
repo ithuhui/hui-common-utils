@@ -1,7 +1,10 @@
 package com.hui.common.utils;
 
+import okhttp3.Call;
+import okhttp3.Response;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Date;
 
 /**
@@ -32,5 +35,14 @@ public class UtilsTest {
     public void dateUtilsTest() throws Exception {
         String dateTime = DateUtils.format(new Date());
         System.out.println(dateTime);
+    }
+
+
+    @Test
+    public void restUtilsTest() throws Exception {
+        RestUtils.INSTANCE.httpGetAsync("http://www.baidu.com", new RestUtils.NetCallBack() {});
+
+        RestUtils.INSTANCE.downloadFile("https://img.jinsom.cn/user_files/13515/publish/file/file-2019-03-05-14-38-18.gif", "D:/test/", "down.gif", new RestUtils.NetCallBack() {}, new RestUtils.ProcessCallBack(){});
+        Thread.sleep(10000);
     }
 }

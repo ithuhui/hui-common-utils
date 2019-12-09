@@ -1,0 +1,57 @@
+package com.hui.common.dao.core;
+
+import lombok.Builder;
+
+import java.util.List;
+
+/**
+ * <code>CommonSqlRunner</code>
+ * <desc>
+ * 描述：
+ * <desc/>
+ * Creation Time: 2019/12/9 21:28.
+ *
+ * @author Gary.Hu
+ */
+@Builder
+public abstract class SqlGenerator {
+
+    private static final String SELECT_SQL = "select %s from `%s` %s %s";
+
+    private static final String SELECT_COUNT_SQL = "select count(1) from `%s` %s %s";
+
+    private static final String DELETE_SQL = "delete from `%s` %s %s";
+
+    private static final String UPDATE_SQL = "update from";
+
+    private String tableName;
+    private String[] fields;
+    private int offset = -1;
+    private int size = -1;
+    private boolean ignoreNullField;
+    private String whereCondition;
+    private List<Object> whereParams;
+
+    private String limitStr;
+    private String fieldStr;
+
+    SqlGenerator(String tableName) {
+        this.tableName = tableName;
+    }
+
+    protected static Builder builder(){
+        return new Builder();
+    }
+
+    static class Builder {
+        private String[] fields;
+        private boolean ignoreNullField;
+        private String whereCondition;
+        private List<Object> whereParams;
+        private String limitStr;
+        private String field;
+
+
+    }
+
+}

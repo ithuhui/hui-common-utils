@@ -3,7 +3,6 @@ package com.hui.common.dao.core;
 import com.alibaba.druid.pool.DruidDataSource;
 
 import javax.sql.DataSource;
-import java.util.Map;
 
 /**
  * <code>DaoFactory</code>
@@ -14,7 +13,7 @@ import java.util.Map;
  *
  * @author Gary.Hu
  */
-public class DatasourceFactory {
+public class BaseDaoFactory {
 
     public static final String MYSQL_DRIVER = " com.mysql.jdbc.Driver";
     public static final String MYSQL_DRIVER_LATEST = " com.mysql.cj.jdbc.Driver";
@@ -34,6 +33,8 @@ public class DatasourceFactory {
         return dataSource;
     }
 
-
-
+    public static IBaseDao create(){
+        IBaseDao baseDao = BaseDaoStrategy.valueOf("mysql").createBaseDao();
+        return baseDao;
+    }
 }

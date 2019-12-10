@@ -1,6 +1,10 @@
 package com.hui.common.dao.core;
 
+import org.apache.commons.dbutils.ResultSetHandler;
+
 import java.io.Serializable;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +23,17 @@ public class MysqlBaseDao<Entity, PK extends Serializable> implements IBaseDao<M
     private String tableName;
 
     @Override
-    public Map<String, Object> selectOne(PK id) {
+    public Map<String, Object> selectOne(PK id) throws SQLException {
+        String sql = SqlGenerator.select(tableName);
+        queryRunner.query(sql, new ResultSetHandler<Map<String,Object>>() {
+            @Override
+            public Map<String, Object> handle(ResultSet rs) throws SQLException {
+                while (rs.next()){
+                    int columnCount = rs.getMetaData().getColumnCount();
+                }
+                return null;
+            }
+        });
         return null;
     }
 

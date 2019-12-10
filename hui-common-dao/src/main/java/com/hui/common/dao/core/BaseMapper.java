@@ -13,6 +13,7 @@ import java.util.List;
  * @author Gary.Hu
  */
 public class BaseMapper<Entity, PK extends Serializable> implements IBaseDao<Entity, PK> {
+
     @Override
     public Entity selectOne(PK id) {
         return null;

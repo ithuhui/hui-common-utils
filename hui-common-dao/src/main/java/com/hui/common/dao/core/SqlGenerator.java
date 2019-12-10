@@ -1,5 +1,6 @@
 package com.hui.common.dao.core;
 
+import com.hui.common.dao.constant.SqlConst;
 import lombok.Builder;
 
 import java.util.List;
@@ -36,7 +37,12 @@ public abstract class SqlGenerator {
     private String fieldStr;
 
     SqlGenerator(String tableName) {
+
         this.tableName = tableName;
+    }
+
+    public static String select(String tableName){
+        return String.format(SELECT_SQL, SqlConst.ALL_FIELDS, tableName);
     }
 
     protected static Builder builder(){
@@ -50,8 +56,6 @@ public abstract class SqlGenerator {
         private List<Object> whereParams;
         private String limitStr;
         private String field;
-
-
     }
 
 }

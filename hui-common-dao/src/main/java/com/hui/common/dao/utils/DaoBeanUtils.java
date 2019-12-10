@@ -10,4 +10,5 @@ package com.hui.common.dao.utils;
  * @author Gary.Hu
  */
 public class DaoBeanUtils {
+
 }

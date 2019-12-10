@@ -1,6 +1,7 @@
 package com.hui.common.dao.core;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -13,7 +14,7 @@ import java.util.List;
  * @author Gary.Hu
  */
 public interface IBaseDao<Entity, PK extends Serializable> {
-    Entity selectOne(PK id);
+    Entity selectOne(PK id) throws SQLException;
 
     List<Entity> selectList();
 

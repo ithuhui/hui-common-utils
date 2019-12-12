@@ -1,7 +1,6 @@
 package com.hui.common.dao.core;
 
 import com.hui.common.dao.constant.SqlConst;
-import lombok.Builder;
 
 import java.util.List;
 
@@ -14,10 +13,9 @@ import java.util.List;
  *
  * @author Gary.Hu
  */
-@Builder
-public abstract class SqlGenerator {
+public class SqlGenerator {
 
-    private static final String SELECT_SQL = "select %s from `%s` %s %s";
+    private static final String SELECT_SQL = "select %s from `%s` limit 1;";
 
     private static final String SELECT_COUNT_SQL = "select count(1) from `%s` %s %s";
 
@@ -43,19 +41,6 @@ public abstract class SqlGenerator {
 
     public static String select(String tableName){
         return String.format(SELECT_SQL, SqlConst.ALL_FIELDS, tableName);
-    }
-
-    protected static Builder builder(){
-        return new Builder();
-    }
-
-    static class Builder {
-        private String[] fields;
-        private boolean ignoreNullField;
-        private String whereCondition;
-        private List<Object> whereParams;
-        private String limitStr;
-        private String field;
     }
 
 }

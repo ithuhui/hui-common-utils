@@ -2,6 +2,8 @@ package com.hui.common.dao.core;
 
 import org.apache.commons.dbutils.QueryRunner;
 
+import javax.sql.DataSource;
+
 /**
  * <code>CommonQueryRunner</code>
  * <desc>
@@ -12,4 +14,9 @@ import org.apache.commons.dbutils.QueryRunner;
  * @author Gary.Hu
  */
 public class CommonQueryRunner extends QueryRunner {
+
+    public CommonQueryRunner(DataSource dataSource) {
+        super(dataSource);
+    }
+
 }

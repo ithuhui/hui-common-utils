@@ -10,22 +10,4 @@ package com.hui.common.dao.core;
  * @author Gary.Hu
  */
 public enum BaseDaoStrategy {
-    /**
-     * baseDao init
-     */
-    MY_SQL {
-        @Override
-        IBaseDao createBaseDao() {
-            return new MysqlBaseDao();
-        }
-    },
-    ORACLE {
-        @Override
-        IBaseDao createBaseDao() {
-            return null;
-        }
-    };
-    private IBaseDao baseDao;
-
-    abstract IBaseDao createBaseDao();
 }

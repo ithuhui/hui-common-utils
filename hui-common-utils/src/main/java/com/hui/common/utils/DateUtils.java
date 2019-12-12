@@ -19,6 +19,7 @@ import java.util.Map;
  *
  * @author Gary.Hu
  */
+@Slf4j
 public class DateUtils {
 
     private static final String DATE_TIMESTAMP = "yyyyMMddHHmmss";

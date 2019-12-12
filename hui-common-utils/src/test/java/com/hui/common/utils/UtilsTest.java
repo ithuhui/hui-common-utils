@@ -1,10 +1,7 @@
 package com.hui.common.utils;
 
-import okhttp3.Call;
-import okhttp3.Response;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.Date;
 
 /**
@@ -44,5 +41,19 @@ public class UtilsTest {
 
         RestUtils.INSTANCE.downloadFile("https://img.jinsom.cn/user_files/13515/publish/file/file-2019-03-05-14-38-18.gif", "D:/test/", "down.gif", new RestUtils.NetCallBack() {}, new RestUtils.ProcessCallBack(){});
         Thread.sleep(10000);
+    }
+
+
+    @Test
+    public void configUtilsTest(){
+        String username = ConfigUtils.INSTANCE.get("username");
+        String password = ConfigUtils.INSTANCE.get("password");
+
+        System.out.println(username);
+        System.out.println(password);
+
+        String s = ConfigUtils.INSTANCE.get("test1.cfg", "app_name", "app_name1");
+        System.out.println(s);
+
     }
 }

@@ -33,7 +33,7 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     }
 
     @Override
-    public List<Entity> selectAll() {
+    public List<Entity> selectAll() throws SQLException {
         List list = baseDao.selectAll();
         String json = gson.toJson(list, String.class);
         List<Entity> entityList = gson.fromJson(json, new TypeToken<List<Entity>>() {
@@ -42,7 +42,7 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     }
 
     @Override
-    public List<Entity> selectPage() {
+    public List<Entity> selectPage() throws SQLException {
         List list = baseDao.selectAll();
         String json = gson.toJson(list, String.class);
         List<Entity> entityList = gson.fromJson(json, new TypeToken<List<Entity>>() {
@@ -51,7 +51,7 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     }
 
     @Override
-    public List<Entity> selectList() {
+    public List<Entity> selectList() throws SQLException {
         List list = baseDao.selectList();
         String json = gson.toJson(list, String.class);
         List<Entity> entityList = gson.fromJson(json, new TypeToken<List<Entity>>() {
@@ -60,37 +60,37 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     }
 
     @Override
-    public int count() {
+    public int count() throws SQLException {
         return baseDao.count();
     }
 
     @Override
-    public Serializable insert(Entity entity) {
-        return baseDao.insert(entity);
+    public Serializable insert(Entity entity) throws SQLException {
+        return null;
     }
 
     @Override
-    public List<Serializable> batchInsert(List<Entity> entities) {
-        return baseDao.batchInsert(entities);
+    public List<Serializable> batchInsert(List<Entity> entities) throws SQLException {
+        return null;
     }
 
     @Override
-    public int update(Entity entity) {
-        return baseDao.update(entity);
+    public int update(Entity entity) throws SQLException {
+        return 0;
     }
 
     @Override
-    public List<Serializable> batchUpdate(List<Entity> entities) {
+    public List<Serializable> batchUpdate(List<Entity> entities) throws SQLException {
         return baseDao.batchUpdate(entities);
     }
 
     @Override
-    public int batchDelete(List<Serializable> ids) {
+    public int batchDelete(List<Serializable> ids) throws SQLException {
         return baseDao.batchDelete(ids);
     }
 
     @Override
-    public int delete(Serializable id) {
+    public int delete(Serializable id) throws SQLException {
         return baseDao.delete(id);
     }
 }

@@ -1,115 +1,120 @@
 package com.hui.common.dao.core;
 
-import org.apache.commons.dbutils.ResultSetHandler;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.sql.DataSource;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * <code>CommonMapper</code>
+ * <code>MysqlDao</code>
  * <desc>
- * 描述： 实现底层接口
+ * 描述：
  * <desc/>
- * Creation Time: 2019/12/9 0:37.
+ * Creation Time: 2019/12/11 21:37.
  *
  * @author Gary.Hu
  */
-public abstract class BaseDao<T, PK extends Serializable> implements IBaseMapper<T, PK> {
+@Slf4j
+public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<String, String>, PK> {
 
-    public BaseDao(DataSource dataSource,String tableName) {
-        this.queryRunner = new CommonQueryRunner(dataSource);
+    public BaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+        this.runnerDao = runnerDao;
         this.tableName = tableName;
+        this.primaryKey = primaryKey;
     }
 
-    private CommonQueryRunner queryRunner;
-    private String tableName;
+    private RunnerDao<Map<String, String>, PK> runnerDao;
+    public String tableName;
+    public String primaryKey;
 
-    protected T query(String sql, ResultSetHandler<T> handler, Object... params) throws SQLException {
-        return queryRunner.query(sql, handler, params);
+    @Override
+    public Map<String, String> selectOne(Serializable id) throws SQLException {
+        final String sql = SqlGenerator.selectBuilder().select(tableName).where("id=?").build().generator();
+        return runnerDao.query(sql, rs -> ofMap(rs), id);
     }
 
-    protected List<T> queryList(String sql, ResultSetHandler<List<T>> handler, Object... params) throws SQLException {
-        return queryRunner.query(sql, handler, params);
+    @Override
+    public List<Map<String, String>> selectAll() throws SQLException {
+        final String sql = SqlGenerator.selectBuilder().select(tableName).build().generator();
+        return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
-    protected int execute(String sql, Object... params) throws SQLException {
-        return queryRunner.execute(sql, params);
+    @Override
+    public List<Map<String, String>> selectPage(int pageNum, int pageSize) throws SQLException {
+        final String sql = SqlGenerator.selectBuilder().select(tableName).limit(pageNum, pageSize).build().generator();
+        return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
-    protected int insertWithKey(Map<String, Object> stringObjectMap) {
+    @Override
+    public List<Map<String, String>> selectList() throws SQLException {
+        final String sql = SqlGenerator
+                .selectBuilder()
+                .select(tableName)
+                .where("")
+                .build()
+                .generator();
+        return runnerDao.queryList(sql, rs -> ofMap(rs));
+    }
+
+    @Override
+    public int count() throws SQLException {
+        final String sql = SqlGenerator
+                .selectBuilder()
+                .selectCount(tableName)
+                .build()
+                .generator();
+        Map<String, String> resultMap = runnerDao.query(sql, rs -> ofMap(rs));
+        String count = resultMap.get("count");
+        return null == count ? 0 : Integer.valueOf(count);
+    }
+
+    @Override
+    public PK insert(Map<String, String> dataMap) throws SQLException {
+
+        return null;
+    }
+
+    public abstract List<Serializable> batchInsert(List<Map<String, String>> maps) throws SQLException;
+
+    @Override
+    public int update(Map<String, String> stringObjectMap) throws SQLException {
         return 0;
     }
 
     @Override
-    public T selectOne(Serializable id) throws SQLException {
-        String sql = SqlGenerator.select(tableName);
-        System.out.println(sql);
-        query(sql, new ResultSetHandler<T>() {
-            @Override
-            public T handle(ResultSet rs) throws SQLException {
-                int columnIndex = 0;
-                while (rs.next()){
-                    String columnName = rs.getMetaData().getColumnName(columnIndex);
-                    System.out.println(columnName);
-                    columnIndex++;
-                }
-                return null;
+    public List<Serializable> batchUpdate(List<Map<String, String>> maps) throws SQLException {
+        return null;
+    }
+
+    @Override
+    public int batchDelete(List<Serializable> ids) throws SQLException {
+        return 0;
+    }
+
+    @Override
+    public int delete(Serializable id) throws SQLException {
+        return 0;
+    }
+
+
+    private List<Map<String, String>> ofMap(ResultSet rs) throws SQLException {
+        List<Map<String, String>> dataList = new LinkedList<>();
+        int columnCount = rs.getMetaData().getColumnCount();
+        while (rs.next()) {
+            Map<String, String> data = new LinkedHashMap<>();
+            int index = 0;
+            while (index++ < columnCount) {
+                String columnLabel = rs.getMetaData().getColumnName(index);
+                String val = rs.getString(columnLabel);
+                data.put(columnLabel, val);
             }
-        });
-        return null;
-    }
-
-    @Override
-    public List<T> selectAll() {
-        return null;
-    }
-
-    @Override
-    public List<T> selectPage() {
-        return null;
-    }
-
-    @Override
-    public List<T> selectList() {
-        return null;
-    }
-
-    @Override
-    public int count() {
-        return 0;
-    }
-
-    @Override
-    public PK insert(T t) {
-        return null;
-    }
-
-    @Override
-    public List<Serializable> batchInsert(List<T> ts) {
-        return null;
-    }
-
-    @Override
-    public int update(T t) {
-        return 0;
-    }
-
-    @Override
-    public List<Serializable> batchUpdate(List<T> ts) {
-        return null;
-    }
-
-    @Override
-    public int batchDelete(List<Serializable> ids) {
-        return 0;
-    }
-
-    @Override
-    public int delete(Serializable id) {
-        return 0;
+            dataList.add(data);
+        }
+        return dataList;
     }
 }

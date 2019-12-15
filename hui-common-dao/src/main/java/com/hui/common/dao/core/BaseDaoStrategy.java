@@ -10,4 +10,28 @@ package com.hui.common.dao.core;
  * @author Gary.Hu
  */
 public enum BaseDaoStrategy {
+
+    /**
+     * INIT SINGLE
+     */
+    MYSQL {
+        @Override
+        public BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+            return new MySqlDao(runnerDao, tableName, primaryKey);
+        }
+    },
+    ORACLE {
+        @Override
+        public BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+            return null;
+        }
+    },
+    POSTGRESQL {
+        @Override
+        public BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+            return null;
+        }
+    };
+
+    public abstract BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey);
 }

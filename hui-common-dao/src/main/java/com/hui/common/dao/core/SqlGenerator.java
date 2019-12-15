@@ -1,8 +1,10 @@
 package com.hui.common.dao.core;
 
-import com.hui.common.dao.constant.SqlConst;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * <code>CommonSqlRunner</code>
@@ -13,34 +15,209 @@ import java.util.List;
  *
  * @author Gary.Hu
  */
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SqlGenerator {
 
-    private static final String SELECT_SQL = "select %s from `%s` limit 1;";
-
-    private static final String SELECT_COUNT_SQL = "select count(1) from `%s` %s %s";
-
-    private static final String DELETE_SQL = "delete from `%s` %s %s";
-
-    private static final String UPDATE_SQL = "update from";
-
     private String tableName;
-    private String[] fields;
-    private int offset = -1;
-    private int size = -1;
-    private boolean ignoreNullField;
     private String whereCondition;
-    private List<Object> whereParams;
-
     private String limitStr;
     private String fieldStr;
+    private boolean ignoreNullField;
+    private StringBuilder finalSql;
 
-    SqlGenerator(String tableName) {
-
-        this.tableName = tableName;
+    public static SelectBuilder selectBuilder() {
+        return new SelectBuilder();
     }
 
-    public static String select(String tableName){
-        return String.format(SELECT_SQL, SqlConst.ALL_FIELDS, tableName);
+    public static UpdateBuilder updateBuilder() {
+        return new UpdateBuilder();
     }
 
+    public static InsertBuilder insertBuilder() {
+        return new InsertBuilder();
+    }
+
+    public static DeleteBuilder deleteBuilder() {
+        return new DeleteBuilder();
+    }
+
+    public String generator() {
+        this.finalSql = this.finalSql.append(";");
+        System.out.println(finalSql);
+        return finalSql.toString();
+
+    }
+
+    public static class WhereBuilder {
+
+    }
+
+    public static class InsertBuilder extends WhereBuilder {
+        private String tableName;
+        private String whereCondition;
+        private String limitStr;
+        private String fieldStr;
+        private boolean ignoreNullField;
+        private StringBuilder finalSql = new StringBuilder();
+
+        public InsertBuilder insert(String tableName) {
+            this.tableName = tableName;
+            String sql = String.format("insert into %s ", tableName);
+            this.finalSql.append(sql);
+            return this;
+        }
+
+        public InsertBuilder fields(String... fields) {
+            this.fieldStr = Arrays.stream(fields).collect(Collectors.joining(","));
+            String sql = String.format("(%s)", this.fieldStr);
+            this.finalSql.append(sql);
+            return this;
+        }
+
+        public InsertBuilder values(){
+            return this;
+        }
+        public SqlGenerator build() {
+            return new SqlGenerator(tableName, whereCondition, limitStr, fieldStr, ignoreNullField, finalSql);
+        }
+    }
+
+    public static class DeleteBuilder {
+        private String tableName;
+        private String whereCondition;
+        private String limitStr;
+        private String fieldStr;
+        private boolean ignoreNullField;
+        private StringBuilder finalSql = new StringBuilder();
+
+        public DeleteBuilder delete(String tableName) {
+            this.tableName = tableName;
+            String sql = String.format("delete from %s ", tableName);
+            finalSql.append(sql);
+            return this;
+        }
+
+        public DeleteBuilder where(String expression) {
+            if (!expression.trim().startsWith("where")) {
+                expression = "where ".concat(expression);
+            }
+            this.whereCondition = expression;
+            finalSql.append(this.whereCondition);
+            return this;
+        }
+
+        public SqlGenerator build() {
+            return new SqlGenerator(tableName, whereCondition, limitStr, fieldStr, ignoreNullField, finalSql);
+        }
+    }
+
+    public static class UpdateBuilder {
+        private String tableName;
+        private String whereCondition;
+        private String limitStr;
+        private String fieldStr;
+        private boolean ignoreNullField;
+        private StringBuilder finalSql = new StringBuilder();
+
+        public UpdateBuilder update(String tableName) {
+            this.tableName = tableName;
+            String sql = String.format("update %s", tableName);
+            finalSql.append(sql);
+            return this;
+        }
+
+        public UpdateBuilder setFields(String fields) {
+            return this;
+        }
+
+        public UpdateBuilder where(String expression) {
+            if (!expression.trim().startsWith("where")) {
+                expression = "where ".concat(expression);
+            }
+            this.whereCondition = expression;
+            finalSql.append(this.whereCondition);
+            return this;
+        }
+
+        public SqlGenerator build() {
+            return new SqlGenerator(tableName, whereCondition, limitStr, fieldStr, ignoreNullField, finalSql);
+        }
+    }
+
+    public static class SelectBuilder {
+        private String tableName;
+        private String whereCondition;
+        private String limitStr;
+        private String fieldStr;
+        private boolean ignoreNullField;
+        private StringBuilder finalSql = new StringBuilder();
+
+        public SelectBuilder select(String tableName) {
+            this.fieldStr = "*";
+            return select(tableName, new String[]{this.fieldStr});
+        }
+
+        public SelectBuilder selectCount(String tableName) {
+            this.fieldStr = "count(1) as count";
+            return select(tableName, new String[]{this.fieldStr});
+        }
+
+        public SelectBuilder select(String tableName, String... fields) {
+            this.tableName = tableName;
+            this.fieldStr = Arrays.stream(fields).collect(Collectors.joining(","));
+            String sql = String.format("select %s from %s ", fieldStr, tableName);
+            finalSql.append(sql);
+            return this;
+        }
+
+
+        public SelectBuilder limit(int size) {
+            this.limitStr = String.format(" limit %s", size);
+            finalSql.append(this.limitStr);
+            return this;
+        }
+
+        public SelectBuilder limit(int offset, int size) {
+            this.limitStr = String.format(" limit %s,%s", String.valueOf(offset), String.valueOf(size));
+            finalSql.append(limitStr);
+            return this;
+        }
+
+        public SelectBuilder where(String expression) {
+            if (!expression.trim().startsWith("where")) {
+                expression = "where ".concat(expression);
+            }
+            this.whereCondition = expression;
+            finalSql.append(this.whereCondition);
+            return this;
+        }
+
+        public SqlGenerator build() {
+            return new SqlGenerator(tableName, whereCondition, limitStr, fieldStr, ignoreNullField, finalSql);
+        }
+    }
+
+
+    public static void main(String[] args) {
+        // selectALL: select * from table;
+        SqlGenerator.selectBuilder().select("t_uc_sys_user").build().generator();
+        // selectOne: select * from table where id = 1;
+        SqlGenerator.selectBuilder().select("t_uc_sys_user").where("id=1").build().generator();
+        // selectList: select * from table where id > 10 and name like '%gary%';
+        SqlGenerator.selectBuilder().select("t_uc_sys_user").where("id=>10 and name like '%gary%'").build().generator();
+        // selectPage: select * from table where id > 10 limit 10,20;
+        SqlGenerator.selectBuilder().select("t_uc_sys_user").where("id=>10").limit(10, 20).build().generator();
+        // count: select count(1) from table;
+        SqlGenerator.selectBuilder().selectCount("t_uc_sys_user").build().generator();
+
+        // entity: user :{id='1',name='gary.hu',create_time='2019-12-14 10:00:00'}
+        // insert: insert into table (field1,field2,field3) values ('val1','val2','val3');
+        SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1","field2","field3").build().generator();
+        // update: update table set field1='val1',set field2='val2',set field3='val3' where id = 1
+        // delete: delete from table where id = 1
+        SqlGenerator.deleteBuilder().delete("t_uc_sys_user").where("id=1").build().generator();
+        // batchInsert: insert into table (field1,field2,field3) values ('va1','val2','val3'),('val1','val2','val3')
+        // batchUpdate: update
+        // delete: delete from table where id in(1,2,3)
+    }
 }

@@ -59,7 +59,6 @@ public class BaseDaoTest {
     @Test
     public void sqlGenTest(){
         String sql = SqlGenerator.selectBuilder().select("t_uc_sys_user").where("id=?").build().generator();
-
     }
 
 }

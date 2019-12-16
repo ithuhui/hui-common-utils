@@ -69,14 +69,20 @@ public class SqlGenerator {
 
         public InsertBuilder fields(String... fields) {
             this.fieldStr = Arrays.stream(fields).collect(Collectors.joining(","));
-            String sql = String.format("(%s)", this.fieldStr);
+            String sql = String.format("(%s) ", this.fieldStr);
             this.finalSql.append(sql);
             return this;
         }
 
-        public InsertBuilder values(){
+        public InsertBuilder values(String... values) {
+            String sql = Arrays.stream(values)
+                    .map(value -> "(" + value + ")")
+                    .collect(Collectors.joining(","));
+            sql = "values ".concat(sql);
+            this.finalSql.append(sql);
             return this;
         }
+
         public SqlGenerator build() {
             return new SqlGenerator(tableName, whereCondition, limitStr, fieldStr, ignoreNullField, finalSql);
         }
@@ -95,6 +101,16 @@ public class SqlGenerator {
             String sql = String.format("delete from %s ", tableName);
             finalSql.append(sql);
             return this;
+        }
+
+        public DeleteBuilder in(String... ids) {
+            String sql = String.format("in (%s)", String.join(",",ids));
+            this.finalSql.append(sql);
+            return this;
+        }
+
+        public DeleteBuilder wherePK(String primaryKey) {
+            return where(primaryKey + "=?");
         }
 
         public DeleteBuilder where(String expression) {
@@ -183,6 +199,10 @@ public class SqlGenerator {
             return this;
         }
 
+        public SelectBuilder wherePK(String primaryKey) {
+            return where(primaryKey + "=?");
+        }
+
         public SelectBuilder where(String expression) {
             if (!expression.trim().startsWith("where")) {
                 expression = "where ".concat(expression);
@@ -212,12 +232,14 @@ public class SqlGenerator {
 
         // entity: user :{id='1',name='gary.hu',create_time='2019-12-14 10:00:00'}
         // insert: insert into table (field1,field2,field3) values ('val1','val2','val3');
-        SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1","field2","field3").build().generator();
+        SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1", "field2", "field3").values("val1,val2,val3").build().generator();
         // update: update table set field1='val1',set field2='val2',set field3='val3' where id = 1
         // delete: delete from table where id = 1
         SqlGenerator.deleteBuilder().delete("t_uc_sys_user").where("id=1").build().generator();
-        // batchInsert: insert into table (field1,field2,field3) values ('va1','val2','val3'),('val1','val2','val3')
+        // batchInsert: insert into table (field1,field2,field3) values ('va1','val2','val3'),('val4','val5','val6')
+        SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1", "field2", "field3").values("val1,val2,val3","val4,val5,val6").build().generator();
         // batchUpdate: update
         // delete: delete from table where id in(1,2,3)
+        SqlGenerator.deleteBuilder().delete("t_uc_sys_user").in("1", "2", "3").build().generator();
     }
 }

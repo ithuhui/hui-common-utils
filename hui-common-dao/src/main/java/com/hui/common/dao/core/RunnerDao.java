@@ -23,7 +23,7 @@ public class RunnerDao<T, PK extends Serializable> {
         this.queryRunner = new CommonQueryRunner(dataSource);
     }
 
-    private CommonQueryRunner queryRunner;
+    private CommonQueryRunner<PK> queryRunner;
 
     protected T query(String sql, ResultSetHandler<List<T>> handler, Object... params) throws SQLException {
         List<T> resultList = queryList(sql, handler, params);
@@ -37,6 +37,23 @@ public class RunnerDao<T, PK extends Serializable> {
         return queryRunner.query(sql, handler, params);
     }
 
+    protected int update(String sql,Object... params) throws SQLException {
+        return queryRunner.update(sql, params);
+    }
+
+    protected PK insertReturnKey(String sql,Object... params) throws SQLException {
+        return queryRunner.insertReturnKey(sql, params);
+    }
+
+    protected List<PK> batchInsertReturnKeys(){
+        return null;
+    }
+
+    protected int batchExecute(String sql, Object[][] params) throws SQLException {
+        queryRunner.batch(sql, params);
+        return 0;
+    }
+
     protected int execute(String sql, Object... params) throws SQLException {
         return queryRunner.execute(sql, params);
     }
@@ -44,5 +61,4 @@ public class RunnerDao<T, PK extends Serializable> {
     protected List<T> execute(String sql, ResultSetHandler<T> handler, Object... params) throws SQLException {
         return queryRunner.execute(sql, handler, params);
     }
-
 }

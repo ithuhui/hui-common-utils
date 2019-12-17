@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <code>MysqlDao</code>
@@ -87,24 +88,41 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
     @Override
     public PK insert(Map<String, String> dataMap) throws SQLException {
 
-        return null;
+        String sql = SqlGenerator.insertBuilder().insert(tableName)
+                .fields(dataMap.keySet().stream().collect(Collectors.joining(",")))
+                .values(dataMap.values().stream().collect(Collectors.joining(",")))
+                .build()
+                .generator();
+        return runnerDao.insertReturnKey(sql);
     }
 
     public abstract List<Serializable> batchInsert(List<Map<String, String>> maps) throws SQLException;
 
     @Override
-    public int update(Map<String, String> stringObjectMap) throws SQLException {
-        return 0;
+    public int update(Map<String, String> entity) throws SQLException {
+        String id = entity.get(primaryKey);
+        String sql = SqlGenerator.updateBuilder()
+                .update(tableName)
+                .setFields(entity,primaryKey)
+                .wherePK(primaryKey)
+                .build()
+                .generator();
+        return runnerDao.update(sql,id);
     }
 
     @Override
-    public List<Serializable> batchUpdate(List<Map<String, String>> maps) throws SQLException {
+    public List<Serializable> batchUpdate(List<Map<String, String>> entitys) throws SQLException {
         return null;
     }
 
     @Override
     public int batchDelete(List<Serializable> ids) throws SQLException {
-        return 0;
+        String sql = SqlGenerator.deleteBuilder()
+                .delete(tableName)
+                .in(ids.toArray(new String[ids.size()]))
+                .build()
+                .generator();
+        return runnerDao.execute(sql);
     }
 
     @Override

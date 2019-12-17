@@ -4,6 +4,9 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -104,7 +107,7 @@ public class SqlGenerator {
         }
 
         public DeleteBuilder in(String... ids) {
-            String sql = String.format("in (%s)", String.join(",",ids));
+            String sql = String.format("in (%s)", String.join(",", ids));
             this.finalSql.append(sql);
             return this;
         }
@@ -138,12 +141,21 @@ public class SqlGenerator {
         public UpdateBuilder update(String tableName) {
             this.tableName = tableName;
             String sql = String.format("update %s", tableName);
-            finalSql.append(sql);
+            this.finalSql.append(sql);
             return this;
         }
 
-        public UpdateBuilder setFields(String fields) {
+        public UpdateBuilder setFields(Map<String,String> maps,String primaryKey) {
+
+            maps.remove(primaryKey);
+            Set<Map.Entry<String, String>> entries = maps.entrySet();
+            String sql = entries.stream().map(entry -> entry.getKey() + "='" + entry.getValue() + "'").collect(Collectors.joining(","));
+            this.finalSql.append(String.format(" set %s ", sql));
             return this;
+        }
+
+        public UpdateBuilder wherePK(String primaryKey) {
+            return where(primaryKey + "=?");
         }
 
         public UpdateBuilder where(String expression) {
@@ -219,6 +231,7 @@ public class SqlGenerator {
 
 
     public static void main(String[] args) {
+        //SELECT
         // selectALL: select * from table;
         SqlGenerator.selectBuilder().select("t_uc_sys_user").build().generator();
         // selectOne: select * from table where id = 1;
@@ -230,16 +243,26 @@ public class SqlGenerator {
         // count: select count(1) from table;
         SqlGenerator.selectBuilder().selectCount("t_uc_sys_user").build().generator();
 
+
+        // INSERT/UPDATE/DELETE
         // entity: user :{id='1',name='gary.hu',create_time='2019-12-14 10:00:00'}
         // insert: insert into table (field1,field2,field3) values ('val1','val2','val3');
         SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1", "field2", "field3").values("val1,val2,val3").build().generator();
-        // update: update table set field1='val1',set field2='val2',set field3='val3' where id = 1
+        // update: update table set field1='val1',field2='val2', field3='val3' where id = 1
+        Map<String, String> map = new HashMap<>();
+        map.put("field1", "val1");
+        map.put("field2", "val2");
+        map.put("field3", "val3");
+        SqlGenerator.updateBuilder().update("t_uc_sys_user").setFields(map,"id").wherePK("id").build().generator();
         // delete: delete from table where id = 1
         SqlGenerator.deleteBuilder().delete("t_uc_sys_user").where("id=1").build().generator();
+
+
+        //BATCH
         // batchInsert: insert into table (field1,field2,field3) values ('va1','val2','val3'),('val4','val5','val6')
-        SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1", "field2", "field3").values("val1,val2,val3","val4,val5,val6").build().generator();
+        SqlGenerator.insertBuilder().insert("t_uc_sys_user").fields("field1", "field2", "field3").values("val1,val2,val3", "val4,val5,val6").build().generator();
         // batchUpdate: update
-        // delete: delete from table where id in(1,2,3)
+        // batchdelete: delete from table where id in(1,2,3)
         SqlGenerator.deleteBuilder().delete("t_uc_sys_user").in("1", "2", "3").build().generator();
     }
 }

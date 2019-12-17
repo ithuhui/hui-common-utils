@@ -22,13 +22,13 @@ import java.util.Map;
 @Slf4j
 public class DateUtils {
 
-    private static final String DATE_TIMESTAMP = "yyyyMMddHHmmss";
+    public static final String DATE_TIMESTAMP = "yyyyMMddHHmmss";
 
-    private static final String DATE_TIME = "yyyy-MM-dd HH:mm:ss";
+    public static final String DATE_TIME = "yyyy-MM-dd HH:mm:ss";
 
-    private static final String DATE_DAY = "yyyyMMdd";
+    public static final String DATE_DAY = "yyyyMMdd";
 
-    private static final String DATE_MIN = "yyyyMMddHHmm";
+    public static final String DATE_MIN = "yyyyMMddHHmm";
 
     private static ThreadLocal<Map<String, SimpleDateFormat>> threadLocalMap = new ThreadLocal<Map<String, SimpleDateFormat>>() {
         @Override

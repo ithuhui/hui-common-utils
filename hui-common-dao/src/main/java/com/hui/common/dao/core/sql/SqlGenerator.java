@@ -1,4 +1,4 @@
-package com.hui.common.dao.core;
+package com.hui.common.dao.core.sql;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

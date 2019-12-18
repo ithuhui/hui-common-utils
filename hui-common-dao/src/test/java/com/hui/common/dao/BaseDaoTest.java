@@ -3,7 +3,7 @@ package com.hui.common.dao;
 import com.hui.common.dao.core.BaseDao;
 import com.hui.common.dao.core.BaseDaoFactory;
 import com.hui.common.dao.core.RunnerDao;
-import com.hui.common.dao.core.SqlGenerator;
+import com.hui.common.dao.core.sql.SqlGenerator;
 import org.junit.Test;
 
 import java.sql.SQLException;

@@ -1,5 +1,6 @@
 package com.hui.common.dao.core;
 
+import com.hui.common.dao.core.sql.SqlGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;

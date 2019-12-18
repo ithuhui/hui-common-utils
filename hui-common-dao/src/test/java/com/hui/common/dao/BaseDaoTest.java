@@ -3,7 +3,6 @@ package com.hui.common.dao;
 import com.hui.common.dao.core.BaseDao;
 import com.hui.common.dao.core.BaseDaoFactory;
 import com.hui.common.dao.core.RunnerDao;
-import com.hui.common.dao.core.sql.SqlGenerator;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -78,9 +77,5 @@ public class BaseDaoTest {
 
     }
 
-    @Test
-    public void sqlGenTest(){
-        String sql = SqlGenerator.selectBuilder().select("t_uc_sys_user").where("id=?").build().generator();
-    }
 
 }

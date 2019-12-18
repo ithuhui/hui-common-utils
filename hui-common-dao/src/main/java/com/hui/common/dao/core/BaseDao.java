@@ -1,6 +1,6 @@
 package com.hui.common.dao.core;
 
-import com.hui.common.dao.core.sql.SqlGenerator;
+import com.hui.common.dao.core.sql.SqlGen;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * <code>MysqlDao</code>
@@ -36,51 +35,51 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
 
     @Override
     public Map<String, String> selectOne(Serializable id) throws SQLException {
-        final String sql = SqlGenerator.selectBuilder()
-                .select(tableName)
-                .wherePK(primaryKey)
+        final String sql = SqlGen.builder()
+                .select()
+                .where("id = ?")
                 .build()
-                .generator();
+                .gen();
         return runnerDao.query(sql, rs -> ofMap(rs), id);
     }
 
     @Override
     public List<Map<String, String>> selectAll() throws SQLException {
-        final String sql = SqlGenerator.selectBuilder()
+        final String sql = SqlGen.builder()
                 .select(tableName)
                 .build()
-                .generator();
+                .gen();
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
     @Override
     public List<Map<String, String>> selectPage(int pageNum, int pageSize) throws SQLException {
-        final String sql = SqlGenerator.selectBuilder()
+        final String sql = SqlGen.builder()
                 .select(tableName)
                 .limit(pageNum, pageSize)
                 .build()
-                .generator();
+                .gen();
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
     @Override
     public List<Map<String, String>> selectList() throws SQLException {
-        final String sql = SqlGenerator
-                .selectBuilder()
+        final String sql = SqlGen
+                .builder()
                 .select(tableName)
                 .where("")
                 .build()
-                .generator();
+                .gen();
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
     @Override
     public int count() throws SQLException {
-        final String sql = SqlGenerator
-                .selectBuilder()
-                .selectCount(tableName)
+        final String sql = SqlGen
+                .builder()
+                .selectCount()
                 .build()
-                .generator();
+                .gen();
         Map<String, String> resultMap = runnerDao.query(sql, rs -> ofMap(rs));
         String count = resultMap.get("count");
         return null == count ? 0 : Integer.valueOf(count);
@@ -89,11 +88,10 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
     @Override
     public PK insert(Map<String, String> dataMap) throws SQLException {
 
-        String sql = SqlGenerator.insertBuilder().insert(tableName)
-                .fields(dataMap.keySet().stream().collect(Collectors.joining(",")))
-                .values(dataMap.values().stream().collect(Collectors.joining(",")))
+        String sql = SqlGen.builder()
+                .insert(tableName,dataMap)
                 .build()
-                .generator();
+                .gen();
         return runnerDao.insertReturnKey(sql);
     }
 
@@ -102,12 +100,10 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
     @Override
     public int update(Map<String, String> entity) throws SQLException {
         String id = entity.get(primaryKey);
-        String sql = SqlGenerator.updateBuilder()
-                .update(tableName)
-                .setFields(entity,primaryKey)
-                .wherePK(primaryKey)
+        String sql = SqlGen.builder()
+                .update(tableName,new LinkedHashMap<>())
                 .build()
-                .generator();
+                .gen();
         return runnerDao.update(sql,id);
     }
 
@@ -118,21 +114,21 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
 
     @Override
     public int batchDelete(List<Serializable> ids) throws SQLException {
-        String sql = SqlGenerator.deleteBuilder()
+        String sql = SqlGen.builder()
                 .delete(tableName)
                 .in(ids.toArray(new String[ids.size()]))
                 .build()
-                .generator();
+                .gen();
         return runnerDao.execute(sql);
     }
 
     @Override
     public int delete(Serializable id) throws SQLException {
-        String sql = SqlGenerator.deleteBuilder()
+        String sql = SqlGen.builder()
                 .delete(tableName)
-                .wherePK(primaryKey)
+                .where(primaryKey)
                 .build()
-                .generator();
+                .gen();
         return runnerDao.execute(sql);
     }
 

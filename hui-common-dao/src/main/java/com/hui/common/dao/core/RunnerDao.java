@@ -37,6 +37,10 @@ public class RunnerDao<T, PK extends Serializable> {
         return queryRunner.query(sql, handler, params);
     }
 
+    protected int update(String sql) throws SQLException {
+        return queryRunner.update(sql);
+    }
+
     protected int update(String sql,Object... params) throws SQLException {
         return queryRunner.update(sql, params);
     }
@@ -49,9 +53,8 @@ public class RunnerDao<T, PK extends Serializable> {
         return null;
     }
 
-    protected int batchExecute(String sql, Object[][] params) throws SQLException {
-        queryRunner.batch(sql, params);
-        return 0;
+    protected int[] batchExecute(String sql, Object[][] params) throws SQLException {
+        return queryRunner.batch(sql, params);
     }
 
     protected int execute(String sql, Object... params) throws SQLException {

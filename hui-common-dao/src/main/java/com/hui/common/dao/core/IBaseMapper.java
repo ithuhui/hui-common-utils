@@ -14,26 +14,24 @@ import java.util.List;
  * @author Gary.Hu
  */
 public interface IBaseMapper<Entity, PK extends Serializable> {
-    Entity selectOne(Serializable id) throws SQLException;
+    Entity selectById(Serializable id) throws SQLException;
 
     List<Entity> selectAll() throws Exception;
 
     List<Entity> selectPage() throws SQLException;
 
-    List<Entity> selectList()throws SQLException;
+    int count() throws SQLException;
 
-    int count()throws SQLException;
+    Serializable insert(Entity entity) throws SQLException;
 
-    Serializable insert(Entity entity)throws SQLException;
+    List<Serializable> batchInsert(List<Entity> entityList) throws SQLException;
 
-    List<Serializable> batchInsert(List<Entity> entityList)throws SQLException;
+    int update(Entity entity) throws SQLException;
 
-    int update(Entity entity)throws SQLException;
+    int batchUpdate(List<Entity> entityList) throws SQLException;
 
-    int batchUpdate(List<Entity> entityList)throws SQLException;
+    int batchDelete(List<Serializable> ids) throws SQLException;
 
-    int batchDelete(List<Serializable> ids)throws SQLException;
-
-    int delete(Serializable id)throws SQLException;
+    int delete(Serializable id) throws SQLException;
 
 }

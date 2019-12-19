@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <code>MysqlDao</code>
@@ -29,14 +26,11 @@ public abstract class BaseDao<PK extends Serializable> {
         this.primaryKey = primaryKey;
     }
 
-    private RunnerDao runnerDao;
-    private String tableName;
-    private String primaryKey;
+    protected RunnerDao runnerDao;
+    protected String tableName;
+    protected String primaryKey;
 
-    public void test() {
-    }
-
-    public Map<String, String> selectOne(Serializable id) throws SQLException {
+    public Map<String, String> selectById(Object id) throws SQLException {
         final String sql = SqlGen.builder()
                 .select()
                 .from(tableName)
@@ -45,7 +39,6 @@ public abstract class BaseDao<PK extends Serializable> {
                 .gen();
         return runnerDao.query(sql, rs -> ofMap(rs), id);
     }
-
 
     public List<Map<String, String>> selectAll() throws SQLException {
         final String sql = SqlGen.builder()
@@ -56,7 +49,6 @@ public abstract class BaseDao<PK extends Serializable> {
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
-
     public List<Map<String, String>> selectPage(int pageNum, int pageSize) throws SQLException {
         final String sql = SqlGen.builder()
                 .select()
@@ -66,18 +58,6 @@ public abstract class BaseDao<PK extends Serializable> {
                 .gen();
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
-
-
-    public List<Map<String, String>> selectList() throws SQLException {
-        final String sql = SqlGen
-                .builder()
-                .select(tableName)
-                .where("")
-                .build()
-                .gen();
-        return runnerDao.queryList(sql, rs -> ofMap(rs));
-    }
-
 
     public int count() throws SQLException {
         final String sql = SqlGen
@@ -90,21 +70,30 @@ public abstract class BaseDao<PK extends Serializable> {
         return null == count ? 0 : Integer.valueOf(count);
     }
 
-
-    public PK insert(Map<String, String> dataMap) throws SQLException {
-        String sql = SqlGen.builder()
-                .insert(tableName, dataMap)
-                .build()
-                .gen();
-        return (PK) runnerDao.insertReturnKey(sql, Long.class);
+    public int insert(Map<String, String> dataMap) throws SQLException {
+        return insert(dataMap, true);
     }
 
-    public abstract List<Serializable> batchInsert(List<Map<String, String>> maps) throws SQLException;
-
+    public int insert(Map<String, String> entity, boolean ignoreNull) throws SQLException {
+        ignoreNullOfMap(entity, ignoreNull);
+        String sql = SqlGen.builder()
+                .insert(tableName, entity)
+                .build()
+                .gen();
+        return runnerDao.insert(sql);
+    }
 
     public int update(Map<String, String> entity) throws SQLException {
-        String id = entity.get(primaryKey);
-        entity.remove(primaryKey);
+        return update(entity, true);
+    }
+
+    public int update(Map<String, String> entity, boolean ignoreNull) throws SQLException {
+        String id = entity.get(this.primaryKey);
+        if (null == id) {
+            throw new SQLException("UPDATE操作必须传入主键");
+        }
+        entity.remove(this.primaryKey);
+        ignoreNullOfMap(entity, ignoreNull);
         String sql = SqlGen.builder()
                 .update(tableName, entity)
                 .where(primaryKey, "?")
@@ -113,17 +102,17 @@ public abstract class BaseDao<PK extends Serializable> {
         return runnerDao.update(sql, id);
     }
 
-    public abstract int batchUpdate(List<Map<String, String>> entities) throws SQLException;
 
-
-    public int batchDelete(List<Serializable> ids) throws SQLException {
+    public int batchDelete(Object... ids) throws SQLException {
+        String[] params = new String[ids.length];
+        Arrays.fill(params, "?");
         String sql = SqlGen.builder()
                 .delete(tableName)
                 .where(primaryKey)
-                .in(ids.toArray(new String[ids.size()]))
+                .in(params)
                 .build()
                 .gen();
-        return runnerDao.execute(sql);
+        return runnerDao.execute(sql, ids);
     }
 
 
@@ -134,6 +123,16 @@ public abstract class BaseDao<PK extends Serializable> {
                 .build()
                 .gen();
         return runnerDao.execute(sql, id);
+    }
+
+    private void ignoreNullOfMap(Map<String, String> dataMap, boolean ignoreNull) {
+        if (ignoreNull) {
+            dataMap.keySet().stream().forEach(key -> {
+                if (null == dataMap.get(key)) {
+                    dataMap.remove(key);
+                }
+            });
+        }
     }
 
     private List<Map<String, String>> ofMap(ResultSet rs) throws SQLException {
@@ -151,4 +150,10 @@ public abstract class BaseDao<PK extends Serializable> {
         }
         return dataList;
     }
+
+    public abstract int batchInsert(List<Map<String, String>> maps) throws SQLException;
+
+    public abstract int batchUpdate(List<Map<String, String>> entities) throws SQLException;
+
+
 }

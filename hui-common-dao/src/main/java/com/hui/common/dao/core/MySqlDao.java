@@ -1,5 +1,7 @@
 package com.hui.common.dao.core;
 
+import com.hui.common.dao.core.sql.SqlGen;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
@@ -20,13 +22,21 @@ public class MySqlDao<PK extends Serializable> extends BaseDao<PK> {
     }
 
     @Override
-    public List<Serializable> batchInsert(List<Map<String, String>> maps) throws SQLException {
-        return null;
+    public int batchInsert(List<Map<String, String>> entities) throws SQLException {
+        String sql = SqlGen.builder()
+                .insertBatch(tableName, entities)
+                .build()
+                .gen();
+        return runnerDao.execute(sql);
     }
 
     @Override
     public int batchUpdate(List<Map<String, String>> entities) throws SQLException {
-        return 0;
+        String sql = SqlGen.builder()
+                .updateBatch(tableName, entities)
+                .build()
+                .gen();
+        return runnerDao.execute(sql);
     }
 
 }

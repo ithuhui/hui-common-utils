@@ -25,7 +25,7 @@ public class RunnerDao {
         this.queryRunner = new CommonQueryRunner(dataSource);
     }
 
-    public BaseDao createBaseDao(String database, String tableName,String primaryKey) throws SQLException {
+    public BaseDao createBaseDao(String database, String tableName, String primaryKey) throws SQLException {
         database = database.toUpperCase();
         BaseDaoStrategy strategy;
         try {
@@ -60,9 +60,12 @@ public class RunnerDao {
         return queryRunner.insertReturnKey(sql, pk, params);
     }
 
-    protected <PK> List<PK> batchInsertReturnKeys(String sql, Class<PK> pk, Object... params) {
-        //TODO
-        return null;
+    protected int insert(String sql, Object... params) throws SQLException {
+        return queryRunner.execute(sql, params);
+    }
+
+    protected int batchInsert(String sql, Object... params) throws SQLException {
+        return queryRunner.execute(sql, params);
     }
 
     protected int[] batchExecute(String sql, Object[][] params) throws SQLException {

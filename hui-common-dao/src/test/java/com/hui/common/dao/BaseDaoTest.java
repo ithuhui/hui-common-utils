@@ -42,7 +42,7 @@ public class BaseDaoTest {
         int count = baseDao.count();
         System.out.println(count);
 
-        Map<String, String> map = baseDao.selectOne(1);
+        Map<String, String> map = baseDao.selectById(1);
         System.out.println(map);
 
         List<Map<String, String>> page = baseDao.selectPage(0, 2);
@@ -51,35 +51,57 @@ public class BaseDaoTest {
         List<Map<String, String>> maps = baseDao.selectAll();
         maps.stream().forEach(x -> System.out.println(x.toString()));
 
-        //TODO
-        baseDao.selectList();
     }
 
 
     @Test
     public void otherTest() throws SQLException {
-        //delete
-        int delete = baseDao.batchDelete(Arrays.asList("6","7"));
-        System.out.println("delete result :" + delete);
+        Map<String, String> dataMap = new HashMap<>();
+        //dataMap.put("user_id", "6");
+        dataMap.put("user_name", "test");
 
         //insert
-        Map<String, String> dataMap = new HashMap<>();
-        dataMap.put("user_id", "6");
-        dataMap.put("user_name", "test");
-        Long pk = baseDao.insert(dataMap);
-        System.out.println(pk);
+        baseDao.insert(dataMap);
 
         //update
-        dataMap.put("user_id", "6");
+        dataMap.put("user_id", "8");
         dataMap.put("user_name", "updateTest");
         baseDao.update(dataMap);
 
+        //delete
+//        int delete = baseDao.batchDelete(pk);
+//        System.out.println("delete result :" + delete);
 
     }
 
     @Test
-    public void baseMapperTest() {
+    public void batchTest() throws SQLException {
+        //batch
+        Map<String, String> data1 = new HashMap<>();
+        data1.put("user_name", "test1");
 
+        Map<String, String> data2 = new HashMap<>();
+        data2.put("user_name", "test2");
+
+        List<Map<String, String>> maps = Arrays.asList(data1, data2);
+//        int affectRow1 = baseDao.batchInsert(maps);
+//        System.out.println(affectRow1);
+
+
+        data1.put("user_id", "12");
+        data1.put("user_name", "update1");
+
+        data2.put("user_id", "13");
+        data2.put("user_name", "update2");
+        maps = Arrays.asList(data1, data2);
+        int affectRow2 = baseDao.batchUpdate(maps);
+        System.out.println(affectRow2);
+    }
+    @Test
+    public void baseMapperTest() {
+        String[] params = new String[6];
+        Arrays.fill(params, "?");
+        System.out.println(Arrays.toString(params));
     }
 
 

@@ -204,7 +204,7 @@ public class SqlGen {
             String keys = String.join(",", keyList);
             String values = dataList.stream()
                     .map(
-                            data -> keyList.stream().map(key -> data.get(key))
+                            data -> keyList.stream().map(key -> "'" + data.get(key) + "'")
                                     .collect(Collectors.joining(","))
                     ).collect(Collectors.joining("),("));
 

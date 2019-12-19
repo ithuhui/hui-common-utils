@@ -15,13 +15,13 @@ import java.sql.*;
  *
  * @author Gary.Hu
  */
-public class CommonQueryRunner<PK extends Serializable> extends QueryRunner {
+public class CommonQueryRunner extends QueryRunner {
 
     public CommonQueryRunner(DataSource dataSource) {
         super(dataSource);
     }
 
-    public PK insertReturnKey(String sql, Object... params) throws SQLException {
+    public <PK> PK insertReturnKey(String sql, Class<PK> pk, Object... params) throws SQLException {
         Connection connection = this.prepareConnection();
         PreparedStatement stmt = null;
 
@@ -30,11 +30,11 @@ public class CommonQueryRunner<PK extends Serializable> extends QueryRunner {
             this.fillStatement(stmt, params);
             stmt.executeUpdate();
             ResultSet rsKey = stmt.getGeneratedKeys();
-            PK k = null;
+            PK key = null;
             if (rsKey.next()) {
-                k = (PK) rsKey.getObject(1, Serializable.class);
+                key = rsKey.getObject(1, pk);
             }
-            return k;
+            return key;
         } catch (SQLException e) {
             this.rethrow(e, sql, params);
 

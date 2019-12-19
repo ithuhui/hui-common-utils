@@ -1,5 +1,9 @@
 package com.hui.common.dao.core.sql;
 
+import javafx.util.Pair;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -94,10 +98,10 @@ public class SqlGen {
 
         public Builder where(String expression) {
             if (firstWhere.get()) {
-                this.resultSQL.append(String.format(" where %s ",expression));
+                this.resultSQL.append(String.format(" where %s ", expression));
                 firstWhere.set(false);
             } else {
-                this.resultSQL.append(String.format(" and %s ",expression));
+                this.resultSQL.append(String.format(" and %s ", expression));
             }
             return this;
         }
@@ -185,31 +189,35 @@ public class SqlGen {
                     String.format("insert into `%s` (%s) values (%s)",
                             tableName,
                             String.join(",", dataMap.keySet()),
-                            String.join(",", dataMap.values())
+                            dataMap.values().stream().map(data -> "'" + data + "'")
+                                    .collect(Collectors.joining(","))
                     )
             );
             return this;
         }
 
         public Builder insertBatch(String tableName, List<Map<String, String>> dataList) {
-            if (dataList.size() < 1){
+            if (dataList.size() < 1) {
                 return this;
             }
-            String fields = String.join(",", dataList.get(0).keySet());
-            String valueList = dataList.stream()
-                    .map(data -> "(" + String.join(",", data.values()) + ")")
-                    .collect(Collectors.joining(","));
+            List<String> keyList = new ArrayList<>(dataList.get(0).keySet());
+            String keys = String.join(",", keyList);
+            String values = dataList.stream()
+                    .map(
+                            data -> keyList.stream().map(key -> data.get(key))
+                                    .collect(Collectors.joining(","))
+                    ).collect(Collectors.joining("),("));
 
-            this.resultSQL.append(String.format("insert into %s (%s) values %s",tableName,fields,valueList));
+            this.resultSQL.append(String.format("insert into %s (%s) values (%s)", tableName, keys, values));
             return this;
         }
 
         public Builder update(String tableName, Map<String, String> dataMap) {
             this.resultSQL.append(
-                    String.format("update `%s` %s",
+                    String.format("update `%s` set %s ",
                             tableName,
                             dataMap.entrySet().stream()
-                                    .map(entry -> "set " +entry.getKey() + "='" + entry.getValue() + "'")
+                                    .map(entry -> entry.getKey() + "='" + entry.getValue() + "'")
                                     .collect(Collectors.joining(","))
                     )
             );
@@ -217,7 +225,7 @@ public class SqlGen {
         }
 
         public Builder updateBatch(String tableName, List<Map<String, String>> dataList) {
-            if (dataList.size() < 1){
+            if (dataList.size() < 1) {
                 return this;
             }
             String fields = String.join(",", dataList.get(0).keySet());
@@ -230,7 +238,7 @@ public class SqlGen {
                     .collect(Collectors.joining(","));
 
 
-            this.resultSQL.append(String.format("insert into %s (%s) values %s  on duplicate key update %s",tableName,fields,valueList,updateList));
+            this.resultSQL.append(String.format("insert into %s (%s) values %s  on duplicate key update %s", tableName, fields, valueList, updateList));
             return this;
         }
 
@@ -238,7 +246,6 @@ public class SqlGen {
             this.resultSQL.append(String.format("delete from `%s` ", tableName));
             return this;
         }
-
 
         public Builder truncate(String tableName) {
             this.resultSQL.append(String.format("truncate `%s`", tableName));

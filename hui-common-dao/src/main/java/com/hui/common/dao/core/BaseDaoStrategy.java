@@ -1,5 +1,7 @@
 package com.hui.common.dao.core;
 
+import java.io.Serializable;
+
 /**
  * <code>BaseDaoStrategy</code>
  * <desc>
@@ -16,22 +18,22 @@ public enum BaseDaoStrategy {
      */
     MYSQL {
         @Override
-        public BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
-            return new MySqlDao(runnerDao, tableName, primaryKey);
+        public <PK extends Serializable> BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+            return new MySqlDao<PK>(runnerDao, tableName, primaryKey);
         }
     },
     ORACLE {
         @Override
-        public BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+        public <PK extends Serializable> BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
             return null;
         }
     },
     POSTGRESQL {
         @Override
-        public BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+        public <PK extends Serializable> BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
             return null;
         }
     };
 
-    public abstract BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey);
+    public abstract <PK extends Serializable> BaseDao createBaseDao(RunnerDao runnerDao, String tableName, String primaryKey);
 }

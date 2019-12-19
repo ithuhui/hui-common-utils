@@ -28,8 +28,6 @@ public interface IBaseDao<Entity, PK> {
 
     int update(Entity entity) throws SQLException;
 
-    List<Serializable> batchUpdate(List<Entity> ts) throws SQLException;
-
     int batchDelete(List<Serializable> ids) throws SQLException;
 
     int delete(Serializable id) throws SQLException;

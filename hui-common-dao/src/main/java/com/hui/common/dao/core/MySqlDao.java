@@ -24,4 +24,9 @@ public class MySqlDao<PK extends Serializable> extends BaseDao<PK> {
         return null;
     }
 
+    @Override
+    public int batchUpdate(List<Map<String, String>> entities) throws SQLException {
+        return 0;
+    }
+
 }

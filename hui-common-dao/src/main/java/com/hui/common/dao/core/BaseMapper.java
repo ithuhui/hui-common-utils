@@ -80,7 +80,7 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     }
 
     @Override
-    public List<Serializable> batchUpdate(List<Entity> entities) throws SQLException {
+    public int batchUpdate(List<Entity> entities) throws SQLException {
         return baseDao.batchUpdate(entities);
     }
 

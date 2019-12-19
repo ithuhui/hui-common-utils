@@ -30,7 +30,7 @@ public interface IBaseMapper<Entity, PK extends Serializable> {
 
     int update(Entity entity)throws SQLException;
 
-    List<Serializable> batchUpdate(List<Entity> entityList)throws SQLException;
+    int batchUpdate(List<Entity> entityList)throws SQLException;
 
     int batchDelete(List<Serializable> ids)throws SQLException;
 

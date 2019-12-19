@@ -21,48 +21,53 @@ import java.util.Map;
  * @author Gary.Hu
  */
 @Slf4j
-public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<String, String>, PK> {
+public abstract class BaseDao<PK extends Serializable> {
 
-    public BaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
+    BaseDao(RunnerDao runnerDao, String tableName, String primaryKey) {
         this.runnerDao = runnerDao;
         this.tableName = tableName;
         this.primaryKey = primaryKey;
     }
 
-    private RunnerDao<Map<String, String>, PK> runnerDao;
-    public String tableName;
-    public String primaryKey;
+    private RunnerDao runnerDao;
+    private String tableName;
+    private String primaryKey;
 
-    @Override
+    public void test() {
+    }
+
     public Map<String, String> selectOne(Serializable id) throws SQLException {
         final String sql = SqlGen.builder()
                 .select()
-                .where("id = ?")
+                .from(tableName)
+                .where(primaryKey, "?")
                 .build()
                 .gen();
         return runnerDao.query(sql, rs -> ofMap(rs), id);
     }
 
-    @Override
+
     public List<Map<String, String>> selectAll() throws SQLException {
         final String sql = SqlGen.builder()
-                .select(tableName)
+                .select()
+                .from(tableName)
                 .build()
                 .gen();
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
-    @Override
+
     public List<Map<String, String>> selectPage(int pageNum, int pageSize) throws SQLException {
         final String sql = SqlGen.builder()
-                .select(tableName)
+                .select()
+                .from(tableName)
                 .limit(pageNum, pageSize)
                 .build()
                 .gen();
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
-    @Override
+
     public List<Map<String, String>> selectList() throws SQLException {
         final String sql = SqlGen
                 .builder()
@@ -73,7 +78,7 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
         return runnerDao.queryList(sql, rs -> ofMap(rs));
     }
 
-    @Override
+
     public int count() throws SQLException {
         final String sql = SqlGen
                 .builder()
@@ -85,51 +90,50 @@ public abstract class BaseDao<PK extends Serializable> implements IBaseDao<Map<S
         return null == count ? 0 : Integer.valueOf(count);
     }
 
-    @Override
-    public PK insert(Map<String, String> dataMap) throws SQLException {
 
+    public PK insert(Map<String, String> dataMap) throws SQLException {
         String sql = SqlGen.builder()
-                .insert(tableName,dataMap)
+                .insert(tableName, dataMap)
                 .build()
                 .gen();
-        return runnerDao.insertReturnKey(sql);
+        return (PK) runnerDao.insertReturnKey(sql, Long.class);
     }
 
     public abstract List<Serializable> batchInsert(List<Map<String, String>> maps) throws SQLException;
 
-    @Override
+
     public int update(Map<String, String> entity) throws SQLException {
         String id = entity.get(primaryKey);
+        entity.remove(primaryKey);
         String sql = SqlGen.builder()
-                .update(tableName,new LinkedHashMap<>())
+                .update(tableName, entity)
+                .where(primaryKey, "?")
                 .build()
                 .gen();
-        return runnerDao.update(sql,id);
+        return runnerDao.update(sql, id);
     }
 
-    @Override
-    public List<Serializable> batchUpdate(List<Map<String, String>> entitys) throws SQLException {
-        return null;
-    }
+    public abstract int batchUpdate(List<Map<String, String>> entities) throws SQLException;
 
-    @Override
+
     public int batchDelete(List<Serializable> ids) throws SQLException {
         String sql = SqlGen.builder()
                 .delete(tableName)
+                .where(primaryKey)
                 .in(ids.toArray(new String[ids.size()]))
                 .build()
                 .gen();
         return runnerDao.execute(sql);
     }
 
-    @Override
+
     public int delete(Serializable id) throws SQLException {
         String sql = SqlGen.builder()
                 .delete(tableName)
-                .where(primaryKey)
+                .where(primaryKey, "?")
                 .build()
                 .gen();
-        return runnerDao.execute(sql);
+        return runnerDao.execute(sql, id);
     }
 
     private List<Map<String, String>> ofMap(ResultSet rs) throws SQLException {

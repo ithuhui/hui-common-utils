@@ -1,8 +1,10 @@
-package com.hui.common.utils;
+package com.hui.common.utils.rest;
 
+import com.hui.common.utils.RetryInterceptor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -48,7 +50,16 @@ public enum RestUtils {
     @Getter
     private OkHttpClient okHttpClient;
 
+    static class HttpLog implements HttpLoggingInterceptor.Logger {
+        @Override
+        public void log(@NotNull String s) {
+            log.debug("okHttpInfo: {}", s);
+        }
+    }
+
     RestUtils() {
+        HttpLoggingInterceptor logInterceptor = new HttpLoggingInterceptor(new HttpLog());
+        logInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         ConnectionPool connectionPool = new ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);
         this.okHttpClient = new OkHttpClient().newBuilder()
                 .readTimeout(SOCKET_TIME_OUT, TimeUnit.MILLISECONDS)
@@ -57,6 +68,7 @@ public enum RestUtils {
                 //自动重连设置为false
                 .retryOnConnectionFailure(true)
                 .connectTimeout(CONNECTION_TIME_OUT, TimeUnit.MILLISECONDS)
+                .addNetworkInterceptor(logInterceptor)
                 //重试拦截器3次
                 .addInterceptor(new RetryInterceptor(5))
                 .build();
@@ -66,7 +78,6 @@ public enum RestUtils {
         default void success(Call call, Response response) throws IOException {
             System.out.println(response.body().string());
         }
-
         default void failed(Call call, IOException e) {
             e.printStackTrace();
         }
@@ -88,7 +99,6 @@ public enum RestUtils {
         Response response = this.okHttpClient.newCall(request).execute();
         return response.body().string();
     }
-
 
     public String httpPost(String url, String requestBodyJson) throws IOException {
         return httpPost(url, requestBodyJson, new HashMap<>());
@@ -193,9 +203,7 @@ public enum RestUtils {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 netCallBack.failed(call, e);
-
             }
-
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 netCallBack.success(call, response);

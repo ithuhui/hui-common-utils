@@ -2,6 +2,7 @@ package com.hui.common.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.hui.common.utils.rest.RestUtils;
 import lombok.Data;
 import lombok.ToString;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class UtilsTest {
         RestUtils.INSTANCE.httpGetAsync("http://www.baidu.com", new RestUtils.NetCallBack() {
         });
 
-        RestUtils.INSTANCE.downloadFile("https://img.jinsom.cn/user_files/13515/publish/file/file-2019-03-05-14-38-18.gif", "D:/test/", "down.gif", new RestUtils.NetCallBack() {
+        RestUtils.INSTANCE.download("https://img.jinsom.cn/user_files/13515/publish/file/file-2019-03-05-14-38-18.gif", "D:/test/", "down.gif", new RestUtils.NetCallBack() {
         }, new RestUtils.ProcessCallBack() {
         });
         Thread.sleep(10000);

@@ -1,5 +1,7 @@
 package com.hui.common.utils.rest;
 
+import com.google.gson.Gson;
+import com.hui.common.utils.GsonUtils;
 import com.hui.common.utils.RetryInterceptor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +52,8 @@ public enum RestUtils {
     @Getter
     private OkHttpClient okHttpClient;
 
+    private static final Gson gson = GsonUtils.INSTANCE.getGson();
+
     static class HttpLog implements HttpLoggingInterceptor.Logger {
         @Override
         public void log(@NotNull String s) {
@@ -59,7 +63,7 @@ public enum RestUtils {
 
     RestUtils() {
         HttpLoggingInterceptor logInterceptor = new HttpLoggingInterceptor(new HttpLog());
-        logInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        logInterceptor.level(HttpLoggingInterceptor.Level.BODY);
         ConnectionPool connectionPool = new ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);
         this.okHttpClient = new OkHttpClient().newBuilder()
                 .readTimeout(SOCKET_TIME_OUT, TimeUnit.MILLISECONDS)
@@ -78,6 +82,7 @@ public enum RestUtils {
         default void success(Call call, Response response) throws IOException {
             System.out.println(response.body().string());
         }
+
         default void failed(Call call, IOException e) {
             e.printStackTrace();
         }
@@ -89,56 +94,92 @@ public enum RestUtils {
         }
     }
 
-    public String httpGet(String url) throws IOException {
-        return httpGet(url, new HashMap<>());
+    /**
+     * ====================
+     * http 通用方法
+     * ====================
+     */
+    public String http(Request request) throws IOException {
+        ResponseBody responseBody = this.okHttpClient.newCall(request).execute().body();
+        return responseBody2Str(responseBody);
     }
 
-    public String httpGet(String url, Map<String, String> headers) throws IOException {
-        Headers ofHeaders = headersHandler(headers);
-        Request request = new Request.Builder().url(url).headers(ofHeaders).get().build();
-        Response response = this.okHttpClient.newCall(request).execute();
-        return response.body().string();
+    public void httpSync(Request request, NetCallBack netCallBack) {
+        this.okHttpClient.newCall(request).enqueue(callbackHandler(netCallBack));
+    }
+
+    /**
+     * ====================
+     * get 通用方法
+     * ====================
+     */
+    public String httpGet(String url) throws IOException {
+        Request request = new Request.Builder().url(url).get().build();
+        return httpGet(request);
+    }
+
+    public String httpGet(Request request) throws IOException {
+        ResponseBody responseBody = this.okHttpClient.newCall(request).execute().body();
+        return responseBody2Str(responseBody);
+    }
+
+    public <T> T httpGet(String url, Class<T> entity) throws IOException {
+        String responseJson = httpGet(url);
+        return gson.fromJson(responseJson, entity);
+    }
+
+    public <T> T httpGet(Request request, Class<T> entity) throws IOException {
+        String responseJson = httpGet(request);
+        return gson.fromJson(responseJson, entity);
+    }
+
+    public void httpGetAsync(String url, NetCallBack netCallBack) throws IOException {
+        Request request = new Request.Builder().url(url).get().build();
+        this.okHttpClient.newCall(request).enqueue(callbackHandler(netCallBack));
+    }
+
+
+    /**
+     * ====================
+     * post 通用方法
+     * ====================
+     */
+    public String httpPost(String url, Object requestBody) throws IOException {
+        String requestBodyJson = gson.toJson(requestBody);
+        return httpPost(url, requestBodyJson);
     }
 
     public String httpPost(String url, String requestBodyJson) throws IOException {
-        return httpPost(url, requestBodyJson, new HashMap<>());
-    }
-
-    public String httpPost(String url, String requestBodyJson, Map<String, String> headers) throws IOException {
-        Headers ofHeaders = Headers.of(headers);
-        if (null == headers) {
-            headers.put("Content-Type", "application/json;charset=utf-8");
-        }
         RequestBody requestBody =
                 RequestBody.create(requestBodyJson, MediaType.parse("application/json;charset=utf-8"));
-        Request request = new Request.Builder().headers(ofHeaders).url(url).post(requestBody).build();
-        Response response = this.okHttpClient.newCall(request).execute();
-        return response.body().string();
+        Request request = new Request.Builder().url(url).post(requestBody).build();
+        ResponseBody responseBody = this.okHttpClient.newCall(request).execute().body();
+        return responseBody2Str(responseBody);
     }
 
-
-    public void httpGetAsync(String url, NetCallBack netCallBack) throws IOException {
-        httpGetAsync(url, new HashMap<>(), netCallBack);
+    public <T> T httpPost(String url, Object requestBody, Class<T> entity) throws IOException {
+        String responseJson = httpPost(url, requestBody);
+        return gson.fromJson(responseJson, entity);
     }
 
-    public void httpGetAsync(String url, Map<String, String> headers, NetCallBack netCallBack) throws IOException {
-        Headers ofHeaders = headersHandler(headers);
-        Request request = new Request.Builder().url(url).headers(ofHeaders).get().build();
-        this.okHttpClient.newCall(request).enqueue(callbackHandler(netCallBack));
+    public <T> T httpPost(String url, String requestBodyJson, Class<T> entity) throws IOException {
+        String responseJson = httpPost(url, requestBodyJson);
+        return gson.fromJson(responseJson, entity);
     }
 
 
     public void httpPostAsync(String url, String requestBodyJson, NetCallBack netCallBack) {
-        httpPostAsync(url, requestBodyJson, new HashMap<>(), netCallBack);
-    }
-
-    public void httpPostAsync(String url, String requestBodyJson, Map<String, String> headers, NetCallBack netCallBack) {
-        Headers ofHeaders = headersHandler(headers);
         RequestBody requestBody = RequestBody.create(requestBodyJson, MediaType.parse("application/json;charset=utf-8"));
-        Request request = new Request.Builder().url(url).headers(ofHeaders).post(requestBody).build();
+        Request request = new Request.Builder().url(url).post(requestBody).build();
         this.okHttpClient.newCall(request).enqueue(callbackHandler(netCallBack));
     }
 
+
+    /**
+     * ====================
+     * 文件下载 通用方法
+     * ====================
+     */
     public void downloadFile(String url, String destFile, String fileName, NetCallBack netCallBack) {
         downloadFile(url, destFile, fileName, netCallBack, null);
     }
@@ -190,12 +231,11 @@ public enum RestUtils {
         });
     }
 
-    private Headers headersHandler(Map<String, String> headers) {
-        if (null == headers || headers.size() == 0) {
-            headers.put("Content-Type", "application/json;charset=utf-8");
+    private String responseBody2Str(ResponseBody responseBody) throws IOException {
+        if (null != responseBody) {
+            return responseBody.string();
         }
-        Headers ofHeaders = Headers.of(headers);
-        return ofHeaders;
+        return null;
     }
 
     private Callback callbackHandler(final NetCallBack netCallBack) {
@@ -204,6 +244,7 @@ public enum RestUtils {
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 netCallBack.failed(call, e);
             }
+
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 netCallBack.success(call, response);

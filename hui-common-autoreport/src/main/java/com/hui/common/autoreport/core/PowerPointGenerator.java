@@ -33,10 +33,11 @@ import java.util.regex.Pattern;
  * @author Hu Weihui
  */
 @Slf4j
-public class PowerPointGenerator {
-    private PowerPointGenerator() {
-
-    }
+public enum PowerPointGenerator {
+    /**
+     * init single
+     */
+    INSTANCE;
 
     /**
      * PPT构造方法
@@ -45,7 +46,7 @@ public class PowerPointGenerator {
      * @param destFilePath
      * @param slideDataMap     每一页的数据（页数，对应页数的数据）
      */
-    public static void generatorPowerPoint(String templateFilePath, String destFilePath, Map<Integer, SlideData> slideDataMap) {
+    public void gen(String templateFilePath, String destFilePath, Map<Integer, SlideData> slideDataMap) {
         XMLSlideShow ppt = readPowerPoint(templateFilePath);
         if (ppt == null) {
             throw new ReportExcetion(ReportErrorEnum.READ_FAIL.getMsg());
@@ -71,7 +72,7 @@ public class PowerPointGenerator {
      * @param ppt
      * @param outputFilePath
      */
-    private static void savePowerPoint(XMLSlideShow ppt, String outputFilePath) {
+    private void savePowerPoint(XMLSlideShow ppt, String outputFilePath) {
         FileOutputStream fileOutputStream = null;
         try {
             fileOutputStream = new FileOutputStream(outputFilePath);
@@ -96,7 +97,7 @@ public class PowerPointGenerator {
      * @param inputFilePath
      * @return
      */
-    private static XMLSlideShow readPowerPoint(String inputFilePath) {
+    private XMLSlideShow readPowerPoint(String inputFilePath) {
         FileInputStream fileInputStream = null;
         XMLSlideShow ppt = null;
         try {
@@ -116,7 +117,7 @@ public class PowerPointGenerator {
      * @param slideData
      * @throws IOException
      */
-    private static void generatorSlide(XSLFSlide slide, SlideData slideData) {
+    private void generatorSlide(XSLFSlide slide, SlideData slideData) {
         List<POIXMLDocumentPart> partList = slide.getRelations();
         //当一页有多个图表的时候
         int chartNum = 0;
@@ -165,7 +166,7 @@ public class PowerPointGenerator {
      * @param chart
      * @param seriesDataList
      */
-    private static void generatorChart(XSLFChart chart, List<ChartSeries> seriesDataList) {
+    private void generatorChart(XSLFChart chart, List<ChartSeries> seriesDataList) {
         //替换图表的数据
         CTPlotArea plotArea = chart.getCTChart().getPlotArea();
         if (plotArea.getBarChartList().size() != 0 && plotArea.getLineChartList().size() != 0) {
@@ -193,7 +194,7 @@ public class PowerPointGenerator {
      * @param textShape
      * @param textMap
      */
-    private static void generatorTextBox(XSLFTextShape textShape, Map<String, String> textMap) {
+    private void generatorTextBox(XSLFTextShape textShape, Map<String, String> textMap) {
         List<XSLFTextParagraph> textParagraphList = textShape.getTextParagraphs();
         for (XSLFTextParagraph textParagraph : textParagraphList) {
             //正则表达式匹配${}标识符的text
@@ -226,7 +227,7 @@ public class PowerPointGenerator {
      * @param table
      * @param tableDataList
      */
-    private static void generatorTable(XSLFTable table, List<TableRowData> tableDataList) {
+    private void generatorTable(XSLFTable table, List<TableRowData> tableDataList) {
         List<XSLFTableRow> rows = table.getRows();
         int rowSize = rows.size() - 1;
         for (int i = 0; i < tableDataList.size(); i++) {
@@ -259,7 +260,7 @@ public class PowerPointGenerator {
      * @throws IOException the io exception
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static void generatorLineGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
+    private void generatorLineGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
         //创建Excel 绑定到图表
         Workbook workBook = createGraphWorkBook(seriesDataList);
         Sheet sheet = workBook.getSheetAt(0);
@@ -327,7 +328,7 @@ public class PowerPointGenerator {
      * @throws IOException the io exception
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static void generatorBarGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
+    private void generatorBarGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
         //创建Excel 绑定到图表
         Workbook workBook = createGraphWorkBook(seriesDataList);
         Sheet sheet = workBook.getSheetAt(0);
@@ -389,7 +390,7 @@ public class PowerPointGenerator {
      * @throws IOException the io exception
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static void generatorPieGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
+    private void generatorPieGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
         //创建Excel 绑定到图表
         Workbook workBook = createGraphWorkBook(seriesDataList);
         Sheet sheet = workBook.getSheetAt(0);
@@ -453,7 +454,7 @@ public class PowerPointGenerator {
      * @param seriesDataList the series data list
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static void generatorBarAndLineGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
+    private void generatorBarAndLineGraph(XSLFChart chart, List<ChartSeries> seriesDataList) {
         //创建Excel 绑定到图表
         Workbook workBook = createGraphWorkBook(seriesDataList);
         Sheet sheet = workBook.getSheetAt(0);
@@ -501,7 +502,7 @@ public class PowerPointGenerator {
      * @return the workbook
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static Workbook createGraphWorkBook(List<ChartSeries> seriesDataList) {
+    private Workbook createGraphWorkBook(List<ChartSeries> seriesDataList) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         for (int i = 0; i <= seriesDataList.get(0).getChartCategoryList().size(); i++) {
@@ -522,7 +523,7 @@ public class PowerPointGenerator {
      * @throws IOException the io exception
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static void writeToGraphExcel(Workbook workbook, XSLFChart chart) {
+    private void writeToGraphExcel(Workbook workbook, XSLFChart chart) {
         POIXMLDocumentPart xlsPart = chart.getRelations().get(0);
         OutputStream xlsOut = xlsPart.getPackagePart().getOutputStream();
         try {
@@ -551,8 +552,8 @@ public class PowerPointGenerator {
      * @param colNum     the col num
      * @since nile -cmszbs-szcst 0.1.0
      */
-    private static void refreshSeriesData(Sheet sheet, CTSerTx tx, CTAxDataSource category, CTNumDataSource val,
-                                          ChartSeries seriesData, int colNum) {
+    private void refreshSeriesData(Sheet sheet, CTSerTx tx, CTAxDataSource category, CTNumDataSource val,
+                                   ChartSeries seriesData, int colNum) {
         //更新系列名称
         tx.getStrRef().getStrCache().getPtArray(0).setV(seriesData.getSeriesName());
 
@@ -594,7 +595,7 @@ public class PowerPointGenerator {
      * @param seriesData the series data
      * @since teachermanager 0.1.0
      */
-    private static void refreshExcelData(int colNum, Sheet sheet, ChartSeries seriesData) {
+    private void refreshExcelData(int colNum, Sheet sheet, ChartSeries seriesData) {
         List<ChartCategory> categoryDataList = seriesData.getChartCategoryList();
         //更新Excel表格每一列的数据
         sheet.getRow(0).getCell(colNum).setCellValue(seriesData.getSeriesName());
@@ -622,7 +623,7 @@ public class PowerPointGenerator {
      * @param seriesData the series data
      * @since teachermanager 0.1.0
      */
-    private static void refreshCategoryData(CTStrData ctStrData, CTNumData ctNumData, ChartSeries seriesData) {
+    private void refreshCategoryData(CTStrData ctStrData, CTNumData ctNumData, ChartSeries seriesData) {
         List<ChartCategory> categoryDataList = seriesData.getChartCategoryList();
         for (int i = 0; i < categoryDataList.size(); i++) {
             ChartCategory categoryData = categoryDataList.get(i);
@@ -647,7 +648,7 @@ public class PowerPointGenerator {
      * @param val      the val
      * @since teachermanager 0.1.0
      */
-    private static void addSeries(CTSerTx tx, CTAxDataSource category, CTNumDataSource val) {
+    private void addSeries(CTSerTx tx, CTAxDataSource category, CTNumDataSource val) {
         tx.addNewStrRef().addNewStrCache().addNewPt();
 
         CTStrData ctStrData = category.addNewStrRef().addNewStrCache();

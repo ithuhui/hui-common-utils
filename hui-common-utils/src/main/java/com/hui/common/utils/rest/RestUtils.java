@@ -2,7 +2,6 @@ package com.hui.common.utils.rest;
 
 import com.google.gson.Gson;
 import com.hui.common.utils.GsonUtils;
-import com.hui.common.utils.RetryInterceptor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -13,8 +12,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**

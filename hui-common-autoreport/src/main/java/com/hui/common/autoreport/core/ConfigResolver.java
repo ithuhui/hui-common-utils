@@ -1,7 +1,7 @@
 
 package com.hui.common.autoreport.core;
 
-import com.hui.base.common.autoreport.model.*;
+import com.hui.common.autoreport.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.POIXMLDocumentPart;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -30,10 +30,6 @@ import java.util.Map;
  */
 public class ConfigResolver {
 
-    //就是执行SQL的一个工具类。这里不提供。因为不是我写的。可以用JdbcTemplate代替。不过要修改下ConfigResolver的代码。
-    //往后修改成JdbcTemplate再提交。测试运行的DEMO代码不需要这个工具类
-    private SqlAutoMapper sqlAutoMapper;
-
     private static final String XML_OBJ_PATH = "declare namespace p='http://schemas.openxmlformats.org/presentationml/2006/main' .//*/p:cNvPr";
 
     private static final String CHART_SQL = "chart.sql";
@@ -60,7 +56,7 @@ public class ConfigResolver {
 
         List<XSLFSlide> slideList = ppt.getSlides();
         for (XSLFSlide slide : slideList) {
-            SlideData slideData = loadSlideConfig(slide,paramsMap);
+            SlideData slideData = loadSlideConfig(slide, paramsMap);
             slideDataMap.put(slide.getSlideNumber(), slideData);
         }
         return slideDataMap;
@@ -98,7 +94,7 @@ public class ConfigResolver {
 
             //判断文本框
             if (shape instanceof XSLFTextShape) {
-                Map<String, String> tempMap = getDataMap((XSLFTextShape) shape,paramsMap);
+                Map<String, String> tempMap = getDataMap((XSLFTextShape) shape, paramsMap);
                 textMap.putAll(tempMap);
             }
             //判断表格
@@ -118,22 +114,21 @@ public class ConfigResolver {
     }
 
 
-
     /**
      * 获取表格需要渲染的值
      *
      * @param table
      * @return
      */
-    public  List<TableRowData> getDataMap(XSLFTable table) {
+    public List<TableRowData> getDataMap(XSLFTable table) {
         Map<String, String> dataMap = new HashMap<>();
         XSLFTableCell cell = table.getCell(0, 0);
-        String sql="";
+        String sql = "";
         if (cell != null) {
             String text = cell.getText();
             Map<String, String> configMap = getConfig(text);
             for (String key : configMap.keySet()) {
-                if (TABLE_SQL.equals(key)){
+                if (TABLE_SQL.equals(key)) {
                     sql = configMap.get(key);
                 }
             }
@@ -151,12 +146,12 @@ public class ConfigResolver {
      * @return the list
      * @since hui_project 1.0.0
      */
-    private List<TableRowData> analysisTableData(List<Map<String, Object>> sqlDataList){
+    private List<TableRowData> analysisTableData(List<Map<String, Object>> sqlDataList) {
         List<TableRowData> tableRowDataList = new ArrayList<>();
         for (Map<String, Object> stringObjectMap : sqlDataList) {
             TableRowData tableData = new TableRowData();
             List<String> dataList = new ArrayList<>();
-            for (String key:stringObjectMap.keySet()){
+            for (String key : stringObjectMap.keySet()) {
                 String data = (String) stringObjectMap.get(key);
                 dataList.add(data);
             }
@@ -172,7 +167,7 @@ public class ConfigResolver {
      * @param text
      * @return
      */
-    public  Map<String, String> getDataMap(XSLFTextShape text, Map<String,Object> paramsMap) {
+    public Map<String, String> getDataMap(XSLFTextShape text, Map<String, Object> paramsMap) {
         Map<String, String> dataMap = new HashMap<>();
         XmlObject[] xmlObjectArray = text.getXmlObject().selectPath(XML_OBJ_PATH);
         if (xmlObjectArray.length > 0) {
@@ -180,9 +175,9 @@ public class ConfigResolver {
             if (props != null) {
                 Map<String, String> configMap = getConfig(props.getDescr());
                 for (String key : configMap.keySet()) {
-                    String dataKey = key.substring(0,key.indexOf("."));
+                    String dataKey = key.substring(0, key.indexOf("."));
                     String sql = configMap.get(key);
-                    String dataValue = sqlAutoMapper.selectOne(sql, paramsMap,String.class);
+                    String dataValue = sqlAutoMapper.selectOne(sql, paramsMap, String.class);
                     dataMap.put(dataKey, dataValue);
                 }
             }
@@ -238,26 +233,26 @@ public class ConfigResolver {
      * @return the list
      * @since hui_project 1.0.0
      */
-    private  List<ChartSeries> analysisGraphData(String sql, Map<String,String> colRowValueMap, Map<String,Object>
+    private List<ChartSeries> analysisGraphData(String sql, Map<String, String> colRowValueMap, Map<String, Object>
             paramsMap) {
         String colName = colRowValueMap.get("col");
         String rowName = colRowValueMap.get("row");
         String valueName = colRowValueMap.get("value");
 
-        List<Map<String, Object>> dataList = sqlAutoMapper.selectList(sql,paramsMap);
+        List<Map<String, Object>> dataList = sqlAutoMapper.selectList(sql, paramsMap);
         List<ChartSeries> seriesDataList = new ArrayList<>();
 
         Map<String, ChartSeries> tmpMap = new HashMap<>();
         for (Map<String, Object> dataMap : dataList) {
 
-            String _colName = (String)dataMap.get(colName);
-            String _rowName = (String)dataMap.get(rowName);
+            String _colName = (String) dataMap.get(colName);
+            String _rowName = (String) dataMap.get(rowName);
             Double _value = Double.parseDouble((String) dataMap.get(valueName));
 
-            if (tmpMap.get(_colName)!=null){
+            if (tmpMap.get(_colName) != null) {
                 ChartSeries seriesData = tmpMap.get(_colName);
                 seriesData.getChartCategoryList().add(new ChartCategory(_rowName, _value));
-            }else {
+            } else {
                 List<ChartCategory> categoryDataList = new ArrayList<>();
                 categoryDataList.add(new ChartCategory(_rowName, _value));
                 ChartSeries seriesData = new ChartSeries();
@@ -266,7 +261,7 @@ public class ConfigResolver {
                 tmpMap.put(_colName, seriesData);
             }
         }
-        for (String key:tmpMap.keySet()){
+        for (String key : tmpMap.keySet()) {
             seriesDataList.add(tmpMap.get(key));
         }
 
@@ -317,7 +312,6 @@ public class ConfigResolver {
             }
         }
     }
-
 
 
 }

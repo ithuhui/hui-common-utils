@@ -1,4 +1,4 @@
-package com.hui.common.utils;
+package com.hui.common.utils.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Interceptor;

@@ -3,7 +3,6 @@ package com.hui.common.dao.core;
 import org.apache.commons.dbutils.QueryRunner;
 
 import javax.sql.DataSource;
-import java.io.Serializable;
 import java.sql.*;
 
 /**
@@ -21,6 +20,15 @@ public class CommonQueryRunner extends QueryRunner {
         super(dataSource);
     }
 
+    /**
+     * 自增的PK才有效果,暂时不用于BaseDao的insert操作,保留方法
+     * @param sql
+     * @param pk
+     * @param params
+     * @param <PK>
+     * @return
+     * @throws SQLException
+     */
     public <PK> PK insertReturnKey(String sql, Class<PK> pk, Object... params) throws SQLException {
         Connection connection = this.prepareConnection();
         PreparedStatement stmt = null;

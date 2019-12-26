@@ -24,6 +24,11 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
 
     private Gson gson = GsonUtils.INSTANCE.getGson();
 
+    public BaseMapper(BaseDao baseDao, Class<Entity> clazz) {
+        this.baseDao = baseDao;
+        this.clazz = clazz;
+    }
+
     @Override
     public Entity selectById(Serializable id) throws SQLException {
         Object object = baseDao.selectById(id);
@@ -42,8 +47,8 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     }
 
     @Override
-    public List<Entity> selectPage() throws SQLException {
-        List list = baseDao.selectAll();
+    public List<Entity> selectPage(int offset,int size) throws SQLException {
+        List list = baseDao.selectPage(offset, size);
         String json = gson.toJson(list, String.class);
         List<Entity> entityList = gson.fromJson(json, new TypeToken<List<Entity>>() {
         }.getType());

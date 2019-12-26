@@ -1,15 +1,14 @@
 package com.hui.common.autoreport.core;
 
-import com.hui.base.common.autoreport.model.ExcelData;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.xssf.streaming.SXSSFCell;
-import org.apache.poi.xssf.streaming.SXSSFRow;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
+import com.hui.common.autoreport.model.ExcelData;
+import lombok.AllArgsConstructor;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -21,102 +20,91 @@ import java.util.List;
  *
  * @author HuWeihui
  */
-public class ExcelGenerator {
+public enum ExcelGenerator {
     /**
-     * 生成XLS版的EXCEL.
-     *
-     * @param fileName  the file name
-     * @param sheetName the sheet name
-     * @param excelData the excel data
-     * @return the hssf workbook
-     * @author HuWeihui
-     * @since hui_project v1
+     * init single
      */
-    public static HSSFWorkbook createXLSWorkBook(String fileName, String sheetName, ExcelData excelData){
-        // 第一步，创建一个HSSFWorkbook，对应一个Excel文件
-        HSSFWorkbook workbook = new HSSFWorkbook();
+    INSTANCE;
 
-        // 第二步，在workbook中添加一个sheet,对应Excel文件中的sheet
-        if (StringUtils.isEmpty(sheetName)){
-            sheetName = "data";
+    @AllArgsConstructor
+    enum ExcelType {
+        /**
+         * EXCEL类型
+         */
+        XLSX(".xlsx", new SXSSFWorkbook()),
+        XLS(".xls", new HSSFWorkbook());
+        private String suffix;
+        private Workbook workbook;
+    }
+
+    public File gen(String fileName, String targetDir, String sheetName, ExcelData excelData, String excelType) throws IOException {
+        ExcelType excelStrategy = ExcelType.valueOf(excelType.toUpperCase());
+
+        // 第一步，创建一个HSSFWorkbook，对应一个Excel文件
+        Workbook workbook = excelStrategy.workbook;
+        fileName = fileName + excelStrategy.suffix;
+
+        File targetFile = getTargetFile(fileName, targetDir);
+
+        try (
+                FileOutputStream fileOutputStream = new FileOutputStream(targetFile);
+                Workbook xlsxWorkBook = createWorkbook(workbook, sheetName, excelData)
+        ) {
+            xlsxWorkBook.write(fileOutputStream);
         }
-        HSSFSheet sheet = workbook.createSheet(sheetName);
+
+        return targetFile;
+    }
+
+    private File getTargetFile(String fileName, String targetDir) {
+        File dir = new File(targetDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        String filePath = targetDir.concat(File.separator).concat(fileName);
+        return new File(filePath);
+    }
+
+    private Workbook createWorkbook(Workbook workbook, String sheetName, ExcelData excelData) {
+        // 第二步，在workbook中添加一个sheet,对应Excel文件中的sheet
+        Sheet sheet = workbook.createSheet(sheetName);
 
         // 第三步，在sheet中添加表头第0行,注意老版本poi对Excel的行数列数有限制
-        HSSFRow row = sheet.createRow(0);
+        Row row = sheet.createRow(0);
 
         // 第四步，创建单元格，并设置值表头 设置表头居中
-        HSSFCellStyle style = workbook.createCellStyle();
-        style.setAlignment(HorizontalAlignment.CENTER); // 创建一个居中格式
+        CellStyle style = workbook.createCellStyle();
+        // 创建一个居中格式
+        style.setAlignment(HorizontalAlignment.CENTER);
 
-        //声明列对象
-        HSSFCell cell = null;
-
-        List<String> title = excelData.getTitle();
-        List<List<String>> values = excelData.getValues();
         //创建标题
-        for (int i = 0; i < title.size(); i++) {
-            cell = row.createCell(i);
-            cell.setCellValue(title.get(i));
-            cell.setCellStyle(style);
-        }
+        createTitle(row, style, excelData);
 
         //创建内容
-        for (int i = 0; i < values.size(); i++) {
-            row = sheet.createRow(i + 1);
-            for (int j = 0; j < values.get(i).size(); j++) {
-                //将内容按顺序赋给对应的列对象
-                row.createCell(j).setCellValue(values.get(i).get(j));
-            }
-        }
+        createContent(sheet, style, excelData);
         return workbook;
     }
 
-    /**
-     * 生成xlsx版的EXCEL.
-     *
-     * @param fileName  the file name
-     * @param sheetName the sheet name
-     * @param excelData the excel data
-     * @return the sxssf workbook
-     * @author HuWeihui
-     * @since hui_project v1
-     */
-    public static SXSSFWorkbook createXLSXWorkBook(String fileName, String sheetName, ExcelData excelData){
-        // 第一步，创建一个HSSFWorkbook，对应一个Excel文件
-        SXSSFWorkbook workbook = new SXSSFWorkbook();
 
-        // 第二步，在workbook中添加一个sheet,对应Excel文件中的sheet
-        SXSSFSheet sheet = workbook.createSheet(sheetName);
-
-        // 第三步，在sheet中添加表头第0行,注意老版本poi对Excel的行数列数有限制
-        SXSSFRow row = sheet.createRow(0);
-
-        // 第四步，创建单元格，并设置值表头 设置表头居中
-        CellStyle cellStyle = workbook.createCellStyle();
-        cellStyle.setAlignment(HorizontalAlignment.CENTER); // 创建一个居中格式
-
-        //声明列对象
-        SXSSFCell cell = null;
-
-        List<String> title = excelData.getTitle();
-
-        List<List<String>> values = excelData.getValues();
-        //创建标题
+    private void createTitle(Row row, CellStyle cellStyle, ExcelData excelData) {
+        List<String> title = excelData.getTitles();
         for (int i = 0; i < title.size(); i++) {
-            cell = row.createCell(i);
+            Cell cell = row.createCell(i);
             cell.setCellValue(title.get(i));
             cell.setCellStyle(cellStyle);
         }
+    }
 
-        //创建内容
+    private void createContent(Sheet sheet, CellStyle cellStyle, ExcelData excelData) {
+        List<List<String>> values = excelData.getValues();
         for (int i = 0; i < values.size(); i++) {
-            row = sheet.createRow(i + 1);
+            Row row = sheet.createRow(i + 1);
             for (int j = 0; j < values.get(i).size(); j++) {
                 //将内容按顺序赋给对应的列对象
-                row.createCell(j).setCellValue(values.get(i).get(j));
+                Cell cell = row.createCell(j);
+                cell.setCellValue(values.get(i).get(j));
+                cell.setCellStyle(cellStyle);
             }
         }
-        return workbook;
     }
 }

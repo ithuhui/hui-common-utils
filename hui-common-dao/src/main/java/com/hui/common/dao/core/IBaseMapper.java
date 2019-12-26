@@ -18,7 +18,7 @@ public interface IBaseMapper<Entity, PK extends Serializable> {
 
     List<Entity> selectAll() throws Exception;
 
-    List<Entity> selectPage() throws SQLException;
+    List<Entity> selectPage(int offset,int size) throws SQLException;
 
     int count() throws SQLException;
 

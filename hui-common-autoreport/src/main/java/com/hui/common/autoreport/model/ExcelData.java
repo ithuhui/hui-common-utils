@@ -1,6 +1,7 @@
 package com.hui.common.autoreport.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -15,22 +16,20 @@ import java.util.List;
  * @author Hu weihui
  */
 @Data
+@NoArgsConstructor
 public class ExcelData implements Serializable {
     private static final long serialVersionUID = 5298452161158057081L;
 
-    private List<String> title;
+    private List<String> titles;
 
     private List<List<String>> values;
 
-    public ExcelData() {
+    public ExcelData(List<String> titles) {
+        this.titles = titles;
     }
 
-    public ExcelData(List<String> title) {
-        this.title = title;
-    }
-
-    public ExcelData(List<String> title, List<List<String>> values) {
-        this.title = title;
+    public ExcelData(List<String> titles, List<List<String>> values) {
+        this.titles = titles;
         this.values = values;
     }
 

@@ -45,7 +45,7 @@ public class UtilsTest {
         RestUtils.INSTANCE.httpGetAsync("http://www.baidu.com", new RestUtils.NetCallBack() {
         });
 
-        RestUtils.INSTANCE.download("https://img.jinsom.cn/user_files/13515/publish/file/file-2019-03-05-14-38-18.gif", "D:/test/", "down.gif", new RestUtils.NetCallBack() {
+        RestUtils.INSTANCE.downloadFile("https://img.jinsom.cn/user_files/13515/publish/file/file-2019-03-05-14-38-18.gif", "D:/test/", "down.gif", new RestUtils.NetCallBack() {
         }, new RestUtils.ProcessCallBack() {
         });
         Thread.sleep(10000);

@@ -6,7 +6,9 @@ import com.hui.common.dao.utils.GsonUtils;
 
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <code>BaseMapper</code>
@@ -32,7 +34,7 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     @Override
     public Entity selectById(Serializable id) throws SQLException {
         Object object = baseDao.selectById(id);
-        String json = gson.toJson(object, String.class);
+        String json = gson.toJson(object);
         Entity entity = gson.fromJson(json, clazz);
         return entity;
     }
@@ -40,14 +42,18 @@ public class BaseMapper<Entity, PK extends Serializable> implements IBaseMapper<
     @Override
     public List<Entity> selectAll() throws SQLException {
         List list = baseDao.selectAll();
-        String json = gson.toJson(list, String.class);
-        List<Entity> entityList = gson.fromJson(json, new TypeToken<List<Entity>>() {
-        }.getType());
-        return entityList;
+        List<Entity> result = new LinkedList<>();
+
+        for (Object object : list) {
+            String jsonString = gson.toJson(object);
+            Entity entity = gson.fromJson(jsonString, clazz);
+            result.add(entity);
+        }
+        return result;
     }
 
     @Override
-    public List<Entity> selectPage(int offset,int size) throws SQLException {
+    public List<Entity> selectPage(int offset, int size) throws SQLException {
         List list = baseDao.selectPage(offset, size);
         String json = gson.toJson(list, String.class);
         List<Entity> entityList = gson.fromJson(json, new TypeToken<List<Entity>>() {

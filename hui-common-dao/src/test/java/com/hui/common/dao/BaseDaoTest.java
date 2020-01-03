@@ -1,11 +1,17 @@
 package com.hui.common.dao;
 
+import com.google.gson.reflect.TypeToken;
 import com.hui.common.dao.core.BaseDao;
+import com.hui.common.dao.core.BaseMapper;
 import com.hui.common.dao.core.RunnerDaoFactory;
 import com.hui.common.dao.core.RunnerDao;
+import com.hui.common.dao.utils.GsonUtils;
+import lombok.Data;
+import lombok.ToString;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -96,13 +102,101 @@ public class BaseDaoTest {
         maps = Arrays.asList(data1, data2);
         int affectRow2 = baseDao.batchUpdate(maps);
         System.out.println(affectRow2);
-    }
-    @Test
-    public void baseMapperTest() {
+
         String[] params = new String[6];
         Arrays.fill(params, "?");
         System.out.println(Arrays.toString(params));
     }
+    @Test
+    public void baseMapperTest() throws SQLException {
+        BaseMapper<User,Integer> testBaseMapper = new TestBaseMapper<User,Integer>(baseDao,User.class);
+        List<User> users = testBaseMapper.selectAll();
+        String json = "[\n" +
+                "  {\n" +
+                "    \"user_id\": \"1\",\n" +
+                "    \"user_name\": \"user1\",\n" +
+                "    \"password\": \"user\",\n" +
+                "    \"deleted\": \"0\",\n" +
+                "    \"create_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"create_user\": \"gary.hu\",\n" +
+                "    \"modify_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"modify_user\": \"gary.hu\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"2\",\n" +
+                "    \"user_name\": \"user2\",\n" +
+                "    \"password\": \"user\",\n" +
+                "    \"deleted\": \"0\",\n" +
+                "    \"create_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"create_user\": \"gary.hu\",\n" +
+                "    \"modify_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"modify_user\": \"gary.hu\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"3\",\n" +
+                "    \"user_name\": \"user3\",\n" +
+                "    \"password\": \"user\",\n" +
+                "    \"deleted\": \"0\",\n" +
+                "    \"create_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"create_user\": \"gary.hu\",\n" +
+                "    \"modify_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"modify_user\": \"gary.hu\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"4\",\n" +
+                "    \"user_name\": \"user4\",\n" +
+                "    \"password\": \"user\",\n" +
+                "    \"deleted\": \"0\",\n" +
+                "    \"create_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"create_user\": \"gary.hu\",\n" +
+                "    \"modify_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"modify_user\": \"gary.hu\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"5\",\n" +
+                "    \"user_name\": \"user5\",\n" +
+                "    \"password\": \"user\",\n" +
+                "    \"deleted\": \"0\",\n" +
+                "    \"create_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"create_user\": \"gary.hu\",\n" +
+                "    \"modify_time\": \"2019-01-01 00:00:00\",\n" +
+                "    \"modify_user\": \"gary.hu\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"8\",\n" +
+                "    \"user_name\": \"test\",\n" +
+                "    \"password\": null,\n" +
+                "    \"deleted\": null,\n" +
+                "    \"create_time\": null,\n" +
+                "    \"create_user\": null,\n" +
+                "    \"modify_time\": null,\n" +
+                "    \"modify_user\": null\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"12\",\n" +
+                "    \"user_name\": \"test1\",\n" +
+                "    \"password\": null,\n" +
+                "    \"deleted\": null,\n" +
+                "    \"create_time\": null,\n" +
+                "    \"create_user\": null,\n" +
+                "    \"modify_time\": null,\n" +
+                "    \"modify_user\": null\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"user_id\": \"13\",\n" +
+                "    \"user_name\": \"test2\",\n" +
+                "    \"password\": null,\n" +
+                "    \"deleted\": null,\n" +
+                "    \"create_time\": null,\n" +
+                "    \"create_user\": null,\n" +
+                "    \"modify_time\": null,\n" +
+                "    \"modify_user\": null\n" +
+                "  }\n" +
+                "]\n";
+        System.out.println("res： " + users);
 
+        List<User> user = GsonUtils.INSTANCE.getGson().fromJson(json, new TypeToken<List<User>>(){}.getType());
+        System.out.println(user);
+    }
 
 }

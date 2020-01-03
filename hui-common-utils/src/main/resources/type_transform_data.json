@@ -1,0 +1,14 @@
+{
+  "测试ID": {
+    "v1": "test_id",
+    "v2": "INTEGER"
+  },
+  "测试名字": {
+    "v1": "test_name",
+    "v2": "STRING"
+  },
+  "测试数组": {
+    "v1": "test_arry",
+    "v2": "ARRAY"
+  }
+}

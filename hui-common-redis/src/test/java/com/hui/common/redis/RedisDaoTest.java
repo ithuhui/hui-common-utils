@@ -11,6 +11,4 @@ package com.hui.common.redis;
  */
 public class RedisDaoTest {
 
-    public static void main(String[] args) {
-    }
 }

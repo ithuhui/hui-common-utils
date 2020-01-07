@@ -1,5 +1,8 @@
 package com.hui.common.redis;
 
+import com.hui.common.redis.core.HashFun;
+import com.hui.common.redis.core.ListFun;
+import com.hui.common.redis.core.SetFun;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;

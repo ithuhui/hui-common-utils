@@ -1,4 +1,4 @@
-package com.hui.common.redis;
+package com.hui.common.redis.core;
 
 /**
  * <code>ZsetFun</code>

@@ -1,19 +1,16 @@
-package com.hui.common.redis;
+package com.hui.common.redis.core;
 
 import redis.clients.jedis.Jedis;
 
 /**
- * <code>KeyValueFun</code>
+ * <code>MapFun</code>
  * <desc>
  * 描述：
  * <desc/>
- * Creation Time: 2019/12/23 0:17.
+ * Creation Time: 2019/12/22 23:35.
  *
  * @author Gary.Hu
  */
-public class CommonFun {
-
+public class HashFun {
     private Jedis jedis;
-
-
 }

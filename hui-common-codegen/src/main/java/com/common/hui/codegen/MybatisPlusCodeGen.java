@@ -56,6 +56,8 @@ public class MybatisPlusCodeGen {
     private static final String MAPPER_PACKAGE = "mapper";
 
 
+    private static String outputDir;
+
     /**
      * <p>
      * 读取控制台内容
@@ -82,14 +84,9 @@ public class MybatisPlusCodeGen {
         // 全局配置================================
         //console 获取路径
         String projectPath = System.getProperty("user.dir");
-        String level1Module = scanner("一级模块名 提示:maven=> parent/一级模块名");
-        String level2Module = scanner("二级模块名 提示:maven=> parent/一级模块名/二级模块名(没有则回车跳过)");
-        String outputPath = projectPath + File.separator + level1Module;
-        // 拼接输出路径
-        if (!StringUtils.isEmpty(level2Module)) {
-            outputPath = outputPath + File.separator + level2Module;
-        }
-        outputPath = outputPath + "/src/main/java";
+        outputDir = scanner("tip: " + projectPath + "/xxx (输出文件夹的相对路径)");
+        String outputPath = projectPath + File.separator + outputDir + "/src/main/java";
+        System.out.println("文件最终输出路径：" + outputPath + "\n");
         GlobalConfig gc = new GlobalConfig()
                 //生成文件输出目录
                 .setOutputDir(outputPath)
@@ -133,10 +130,15 @@ public class MybatisPlusCodeGen {
                 .setPassword(PASSWORD);
 
         // 包配置================================
+        String parentPackage = scanner("tip: 输出的包路径");
+        String modulePackage = scanner("tip: 输出的包模块名称");
+        System.out.println("包最终输出路径：" + parentPackage + "." + modulePackage + "\n");
+
         PackageConfig pc = new PackageConfig()
-                .setModuleName(scanner("包名 提示:" + PARENT_PACKAGE + ".包名"))
                 // 父包名
-                .setParent(PARENT_PACKAGE)
+                .setParent(parentPackage)
+                // 模块名
+                .setModuleName(modulePackage)
                 // 实体类/service/mapper/xml/controller包名
                 .setEntity(ENTITY_PACKAGE)
                 .setMapper(MAPPER_PACKAGE)
@@ -144,7 +146,7 @@ public class MybatisPlusCodeGen {
                 .setService(SERVICE_PACKAGE)
                 .setServiceImpl(SERVICE_IMPL_PACKAGE);
 
-        // 策略配置
+        // 策略配置================================
         StrategyConfig strategy = new StrategyConfig()
                 //表名前缀
                 .setTablePrefix()
@@ -187,11 +189,7 @@ public class MybatisPlusCodeGen {
                     @Override
                     public String outputFile(TableInfo tableInfo) {
                         // 自定义输出文件名 ， 如果你 Entity 设置了前后缀、此处注意 xml 的名称会跟着发生变化！！
-                        String xmlOutPutPath = projectPath + File.separator + level1Module;
-                        if (!StringUtils.isEmpty(level2Module)) {
-                            xmlOutPutPath = xmlOutPutPath + File.separator + level2Module;
-                        }
-                        xmlOutPutPath = xmlOutPutPath
+                        String xmlOutPutPath = outputDir
                                 + "/src/main/resources/mapper"
                                 + File.separator
                                 + pc.getModuleName()

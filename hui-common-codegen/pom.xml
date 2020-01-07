@@ -28,5 +28,13 @@
             <artifactId>mybatis-plus-generator</artifactId>
             <version>${mybatis-plus}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-core</artifactId>
+            <version>2.1</version>
+            <scope>runtime</scope>
+        </dependency>
+
     </dependencies>
 </project>

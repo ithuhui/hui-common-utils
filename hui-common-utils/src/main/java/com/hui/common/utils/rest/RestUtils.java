@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -110,8 +111,15 @@ public enum RestUtils {
      * get 通用方法
      * ====================
      */
-    public String httpGet(String url) throws IOException {
-        Request request = new Request.Builder().url(url).get().build();
+    public String httpGet(String url, Map<String, String> params) throws IOException {
+        HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(url).newBuilder();
+        if (null != params) {
+            params.keySet().stream().forEach(key -> {
+                        httpUrlBuilder.setQueryParameter(key, params.get(key));
+                    }
+            );
+        }
+        Request request = new Request.Builder().url(httpUrlBuilder.build()).get().build();
         return httpGet(request);
     }
 
@@ -120,8 +128,8 @@ public enum RestUtils {
         return responseBody2Str(responseBody);
     }
 
-    public <T> T httpGet(String url, Class<T> entity) throws IOException {
-        String responseJson = httpGet(url);
+    public <T> T httpGet(String url, Map<String, String> params, Class<T> entity) throws IOException {
+        String responseJson = httpGet(url, params);
         return gson.fromJson(responseJson, entity);
     }
 

@@ -84,8 +84,14 @@ public class MybatisPlusCodeGen {
         // 全局配置================================
         //console 获取路径
         String projectPath = System.getProperty("user.dir");
-        outputDir = scanner("tip: " + projectPath + "/xxx (输出文件夹的相对路径)");
-        String outputPath = projectPath + File.separator + outputDir + "/src/main/java";
+        outputDir = scanner("tip: " + projectPath + "/xxx (输出文件夹的相对路径,没有二级目录请填NULL)");
+        if ("NULL".equals(outputDir.toUpperCase())) {
+            outputDir = "";
+        }
+        if (outputDir.startsWith("/") || outputDir.startsWith("\\")) {
+            outputDir = File.separator + outputDir;
+        }
+        String outputPath = projectPath + outputDir + "/src/main/java";
         System.out.println("文件最终输出路径：" + outputPath + "\n");
         GlobalConfig gc = new GlobalConfig()
                 //生成文件输出目录

@@ -33,8 +33,8 @@ public class MybatisPlusCodeGen {
      * INFO
      */
     private static final String AUTH = "Gary.hu";
-    private static final String[] TABLES = new String[]{"t_schedule_job_inst"};
-    private static final String TABLE_PREFIX = "t_schedule";
+    private static String[] TABLES = new String[]{"t_schedule_job_inst"};
+    private static String TABLE_PREFIX = "t_schedule";
     private static final String BASE_ENTITY_CLASS = "com.hui.cloud.common.model.BaseEntity";
 
     /**
@@ -56,46 +56,75 @@ public class MybatisPlusCodeGen {
     private static final String MAPPER_PACKAGE = "mapper";
 
 
-    private static String outputDir;
+    private static final String NEXT_SYMBOL = "NULL";
+
+    /**
+     * 输出文件夹
+     */
+    private static String FILE_OUTPUT_DIR;
 
     /**
      * <p>
      * 读取控制台内容
      * </p>
      */
-    private static String scanner(String tip) {
+    private static String scanner(String tip, boolean required) {
         Scanner scanner = new Scanner(System.in);
         StringBuilder help = new StringBuilder();
-        help.append("请输入" + tip + "：");
+        help.append("请输入:" + tip);
         System.out.println(help.toString());
         if (scanner.hasNext()) {
             String ipt = scanner.next();
+            if (!required) {
+                if (tip.equalsIgnoreCase(NEXT_SYMBOL)) {
+                    return null;
+                }
+            }
             if (StringUtils.isNotEmpty(ipt)) {
                 return ipt;
             }
         }
-        throw new MybatisPlusException("请输入正确的" + tip + "！");
+        throw new MybatisPlusException(String.format("请输入正确的%s！", tip));
     }
 
     public static void main(String[] args) {
         // 代码生成器
         AutoGenerator mpg = new AutoGenerator();
 
-        // 全局配置================================
-        //console 获取路径
+        String tables = scanner(" 请输入表名，逗号分隔 (如果使用代码配置的表，请输入null)", false);
+        if (null != tables) {
+            String[] tableArray = tables.split(",");
+            TABLES = tableArray;
+        }
+        String tablePrefix = scanner("表前缀(如果使用代码配置的表，请输入null)", false);
+        if (null != tablePrefix) {
+            TABLE_PREFIX = tablePrefix;
+        }
+
+        //console 获取信息
         String projectPath = System.getProperty("user.dir");
-        outputDir = scanner("tip: " + projectPath + "/xxx (输出文件夹的相对路径,没有二级目录请填NULL)");
-        if ("NULL".equals(outputDir.toUpperCase())) {
-            outputDir = "";
+        FILE_OUTPUT_DIR = scanner(String.format("tip: %s/xxx (输出文件夹的相对路径,没有二级目录请填NULL)", projectPath), false);
+        if (null == FILE_OUTPUT_DIR) {
+            FILE_OUTPUT_DIR = "";
         }
-        if (outputDir.startsWith("/") || outputDir.startsWith("\\")) {
-            outputDir = File.separator + outputDir;
+        if (!FILE_OUTPUT_DIR.startsWith("/") || !FILE_OUTPUT_DIR.startsWith("\\")) {
+            FILE_OUTPUT_DIR = File.separator + FILE_OUTPUT_DIR;
         }
-        String outputPath = projectPath + outputDir + "/src/main/java";
-        System.out.println("文件最终输出路径：" + outputPath + "\n");
+        FILE_OUTPUT_DIR = projectPath + FILE_OUTPUT_DIR + "/src/main/java";
+        System.out.println(String.format("文件最终输出路径：%s", FILE_OUTPUT_DIR));
+
+
+        // 包配置================================
+        String parentPackage = scanner("需要生成代码的包路径", true);
+        String modulePackage = scanner("需要生成代码的模块名称", true);
+        System.out.println(String.format("包最终输出路径：%s.%s", parentPackage, modulePackage));
+
+
+
+        // 全局配置================================
         GlobalConfig gc = new GlobalConfig()
                 //生成文件输出目录
-                .setOutputDir(outputPath)
+                .setOutputDir(FILE_OUTPUT_DIR)
                 // 文件覆盖
                 .setFileOverride(false)
                 //不需要ActiveRecord特性的请改为false
@@ -135,10 +164,6 @@ public class MybatisPlusCodeGen {
                 .setUsername(USERNAME)
                 .setPassword(PASSWORD);
 
-        // 包配置================================
-        String parentPackage = scanner("tip: 输出的包路径");
-        String modulePackage = scanner("tip: 输出的包模块名称");
-        System.out.println("包最终输出路径：" + parentPackage + "." + modulePackage + "\n");
 
         PackageConfig pc = new PackageConfig()
                 // 父包名

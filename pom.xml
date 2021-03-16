@@ -28,6 +28,7 @@
         <module>hui-common-redis</module>
         <module>hui-common-es</module>
         <module>hui-common-calcite</module>
+        <module>hui-common-beetl</module>
     </modules>
 
 

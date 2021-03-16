@@ -21,7 +21,6 @@ import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.MysqlSqlDialect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -68,7 +67,7 @@ public class SqlParserTest {
                 "  and u.age > 50\n" +
                 "  and u.id is not null\n" +
                 "order by user_id\n" +
-                "limit 10 where u.age = 22 ";
+                "limit 10  ";
 
         System.out.println("原始sql: " + testSql);
         // sql解析器
@@ -78,10 +77,6 @@ public class SqlParserTest {
 
         SqlNode sqlNode = sqlParser.parseQuery();
 
-
-        SqlSelect sqlNode1 = (SqlSelect) sqlNode;
-        SqlNode from = sqlNode1.getFrom();
-        System.out.println(from);
 
         SchemaPlus rootSchema = CalciteUtils.registerRootSchema();
 

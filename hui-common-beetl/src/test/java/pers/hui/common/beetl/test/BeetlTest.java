@@ -1,12 +1,15 @@
-package pers.hui.common.beetl;
+package pers.hui.common.beetl.test;
 
+import org.beetl.core.Context;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.junit.Test;
+import pers.hui.common.beetl.BeetlCore;
 import pers.hui.common.beetl.fun.DimColFun;
 import pers.hui.common.beetl.fun.KpiColFun;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * <code>BeetlTest</code>
@@ -33,6 +36,9 @@ public class BeetlTest {
         template.binding("name", "beetl");
         //渲染结果
         String result = template.render();
+        Context ctx = template.getCtx();
+        Map<String, Object> globalVar = ctx.globalVar;
+        System.out.println(globalVar.toString());
         System.out.println(result);
     }
 }

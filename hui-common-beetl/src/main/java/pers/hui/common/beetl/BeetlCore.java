@@ -7,6 +7,7 @@ import org.beetl.core.Template;
 import org.beetl.core.resource.StringTemplateResourceLoader;
 import pers.hui.common.beetl.fun.DimColFun;
 import pers.hui.common.beetl.fun.KpiColFun;
+import pers.hui.common.beetl.model.ValBinding;
 
 import java.io.IOException;
 import java.util.Map;
@@ -43,9 +44,14 @@ public class BeetlCore {
      * @param content
      * @throws IOException
      */
-    public static void getFieldValue(String content) throws IOException {
+    public static Map<String, Object> getFieldValue(String content) throws IOException {
         Template template = groupTemplateInit().getTemplate(content);
+        template.render();
         Context ctx = template.getCtx();
-        Map<String, Object> globalVar = ctx.globalVar;
+        return ctx.globalVar;
+    }
+
+    public static void customRender(String content, ValBinding valBinding) throws IOException {
+
     }
 }

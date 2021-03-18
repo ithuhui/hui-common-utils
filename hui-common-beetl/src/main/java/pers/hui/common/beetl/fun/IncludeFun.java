@@ -1,5 +1,8 @@
 package pers.hui.common.beetl.fun;
 
+import org.beetl.core.Context;
+import org.beetl.core.Function;
+
 /**
  * <code>IncludeFun</code>
  * <desc>
@@ -9,5 +12,17 @@ package pers.hui.common.beetl.fun;
  *
  * @author Gary.Hu
  */
-public class IncludeFun {
+public class IncludeFun implements Function {
+
+    /**
+     * #{include("base","t_user")}
+     *
+     * @param objects
+     * @param context
+     * @return
+     */
+    @Override
+    public Object call(Object[] objects, Context context) {
+        return null;
+    }
 }

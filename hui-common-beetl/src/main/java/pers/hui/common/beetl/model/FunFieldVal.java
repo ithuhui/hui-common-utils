@@ -17,7 +17,6 @@ import lombok.Data;
 public class FunFieldVal {
     private String code;
     private String comment;
-    private String value;
-    private boolean isNested;
-    private FunFieldVal nestedFunFieldVal;
+    private String val;
+    private FunFieldVal childFunFieldVal;
 }

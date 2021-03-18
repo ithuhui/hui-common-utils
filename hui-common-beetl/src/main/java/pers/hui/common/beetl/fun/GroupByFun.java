@@ -1,5 +1,8 @@
 package pers.hui.common.beetl.fun;
 
+import org.beetl.core.Context;
+import org.beetl.core.Function;
+
 /**
  * <code>GroupByFun</code>
  * <desc>
@@ -9,5 +12,16 @@ package pers.hui.common.beetl.fun;
  *
  * @author Gary.Hu
  */
-public class GroupByFun {
+public class GroupByFun implements Function {
+
+    /**
+     * 形式： #{ groupBy("group")} %>
+     * @param params 入参
+     * @param ctx 模板上下文
+     * @return 解析成功的字符串
+     */
+    @Override
+    public Object call(Object[] params, Context ctx) {
+        return null;
+    }
 }

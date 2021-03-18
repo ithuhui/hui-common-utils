@@ -2,17 +2,23 @@ package pers.hui.common.beetl.fun;
 
 import org.beetl.core.Context;
 import org.beetl.core.Function;
-import pers.hui.common.beetl.model.CaseWhenBinding;
+import pers.hui.common.beetl.model.FunFieldVal;
+import pers.hui.common.beetl.model.casewhen.CaseWhenBinding;
+import pers.hui.common.beetl.model.casewhen.WhenVal;
+import pers.hui.common.beetl.model.casewhen.WhenValField;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <code>DimFun</code>
  * <desc>
  * 描述： 维度字段解析
- * 1. 支持 cashwhen
+ * 1. 支持 caseWhen
+ * 2. 支持嵌套caseWhen
+ * 流程： 查询模板勾选字段分层
  * <desc/>
  * <b>Creation Time:</b> 2021/3/17 11:30.
  *
@@ -48,12 +54,18 @@ public class DimColFun implements Function {
         assert code != null;
         // 设置到全局变量 key = DIM_${code}
         String key = DIM_SYMBOL.concat(code);
-        context.set(key, paramsList);
+        FunFieldVal funFieldVal = FunFieldVal.builder()
+                .code(String.valueOf(paramsList.get(0)))
+                .comment(String.valueOf(paramsList.get(1)))
+                .val(String.valueOf(paramsList.get(2)))
+                .build();
+        context.set(key, funFieldVal);
         return caseWhenHandle(code, context);
     }
 
 
     /**
+     * caseWhen处理，从全局变量获取到是否需要转换caseWhen字段
      * 1. case when col = 'x'
      * 2. case when col1 = '2' and col2 > 10
      *
@@ -72,22 +84,32 @@ public class DimColFun implements Function {
     }
 
     private String recursion(CaseWhenBinding caseWhenBinding) {
-        List<CaseWhenBinding.CaseWhenVal> caseWhenValList = caseWhenBinding.getCaseWhenValList();
+        List<WhenVal> caseWhenValList = caseWhenBinding.getWhenValList();
         StringBuilder whenThen = new StringBuilder();
-        for (CaseWhenBinding.CaseWhenVal caseWhenVal : caseWhenValList) {
-            List<String> whenValList = caseWhenVal.getWhenValList();
+        for (WhenVal caseWhenVal : caseWhenValList) {
+            List<WhenValField> whenValFieldList = caseWhenVal.getWhenValFieldList();
+            List<String> whenValList = whenValFieldList.stream().map(whenField -> {
+                String code = whenField.getCode();
+                String symbol = whenField.getSymbol();
+                String val = whenField.getVal();
+                return String.join(" ", code, symbol, val);
+            }).collect(Collectors.toList());
             String whenVal = String.join(" and ", whenValList);
-            String thenVal = caseWhenVal.getThenVal();
-            List<CaseWhenBinding> childCaseWhenBindingList = caseWhenVal.getChildCaseWhenBindingList();
-            if (null != childCaseWhenBindingList && !childCaseWhenBindingList.isEmpty()) {
-                for (CaseWhenBinding val : childCaseWhenBindingList) {
-                    thenVal = recursion(val);
-                    System.out.println(thenVal);
-                }
+            String thenVal = "'" + caseWhenVal.getThenVal() + "'";
+            CaseWhenBinding childCaseWhenBinding = caseWhenVal.getChildCaseWhenBinding();
+            if (null != childCaseWhenBinding) {
+                thenVal = recursion(childCaseWhenBinding);
+                System.out.println(thenVal);
             }
             whenThen.append(String.format(" when %s then %s \n", whenVal, thenVal));
         }
-        String elseVal = caseWhenBinding.getElseVal();
-        return String.format("case %s else %s end as %s", whenThen, elseVal, caseWhenBinding.getCode());
+        String elseVal = "'" + caseWhenBinding.getElseVal() + "'";
+
+        String code = caseWhenBinding.getCode();
+        String alias = "as " + code;
+        if (null == code) {
+            alias = "";
+        }
+        return String.format("case %s else %s end %s", whenThen, elseVal, alias);
     }
 }

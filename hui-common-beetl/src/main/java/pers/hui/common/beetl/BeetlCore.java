@@ -7,6 +7,7 @@ import org.beetl.core.Template;
 import org.beetl.core.resource.StringTemplateResourceLoader;
 import pers.hui.common.beetl.fun.DimColFun;
 import pers.hui.common.beetl.fun.KpiColFun;
+import pers.hui.common.beetl.fun.WhereFun;
 import pers.hui.common.beetl.model.ValBinding;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ public class BeetlCore {
         GroupTemplate groupTemplate = new GroupTemplate(resourceLoader, cfg);
         groupTemplate.registerFunction("dimCol", new DimColFun());
         groupTemplate.registerFunction("kpiCol", new KpiColFun());
+        groupTemplate.registerFunction("where", new WhereFun());
         return groupTemplate;
     }
 

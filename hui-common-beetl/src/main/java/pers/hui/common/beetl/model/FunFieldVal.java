@@ -18,5 +18,6 @@ public class FunFieldVal {
     private String code;
     private String comment;
     private String val;
+    private String resVal;
     private FunFieldVal childFunFieldVal;
 }

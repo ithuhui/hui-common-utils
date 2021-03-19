@@ -6,7 +6,6 @@ import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.junit.Test;
 import pers.hui.common.beetl.BeetlCore;
-import pers.hui.common.beetl.model.WhereBinding;
 import pers.hui.common.beetl.model.WhereInfo;
 import pers.hui.common.beetl.model.casewhen.CaseWhenBinding;
 
@@ -170,6 +169,93 @@ public class BeetlTest {
         template.getCtx().set("WHERE_group", whereInfo);
 
         String result = template.render();
+        System.out.println(result);
+
+    }
+
+    @Test
+    public void dynamicRoute() throws IOException {
+        String templateStr = "\n" +
+                "<%\n" +
+                "var output1 = dim1.out or dim2.out;\n" +
+                "println(output1);\n" +
+                "println(dim);\n" +
+                "var test1 = test('code','comment','val',output1);" +
+                "%>\n"+
+                "#{test1}";
+
+        GroupTemplate groupTemplate = BeetlCore.groupTemplateInit();
+        //获取模板
+        Template template = groupTemplate.getTemplate(templateStr);
+        template.binding("dim","2");
+//        template.getCtx().set("dim", "1");
+//        groupTemplate.getSharedVars().put("dim", "1");
+
+        String result = template.render();
+        System.out.println("-----------");
+        System.out.println(result);
+    }
+
+    @Test
+    public void groupTest() throws IOException {
+        //language=JSON
+        String json = "{\n" +
+                "  \"code\": \"user_id\",\n" +
+                "  \"elseVal\": \"NA\",\n" +
+                "  \"whenValList\": {\n" +
+                "    \"whenValFieldList\": [\n" +
+                "      {\n" +
+                "        \"code\": \"LP_FLAG\",\n" +
+                "        \"symbol\": \">\",\n" +
+                "        \"val\": \"0\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"code\": \"CP_FLAG\",\n" +
+                "        \"symbol\": \">\",\n" +
+                "        \"val\": \"0\"\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"thenVal\": null,\n" +
+                "    \"childCaseWhenBinding\": {\n" +
+                "      \"code\": null,\n" +
+                "      \"whenValList\": {\n" +
+                "        \"whenValFieldList\": [\n" +
+                "          {\n" +
+                "            \"code\": \"CP_SALES_EXCL_VAT\",\n" +
+                "            \"symbol\": \">\",\n" +
+                "            \"val\": \"LP_SALES_EXCL_VAT\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"thenVal\": \"BRAND INCREAS\",\n" +
+                "        \"childCaseWhenBinding\": null\n" +
+                "      },\n" +
+                "      \"elseVal\": \"BRAND DECREASE\"\n" +
+                "    " +
+                "}" +
+                "\n" +
+                "  }\n" +
+                "}";
+        CaseWhenBinding caseWhenBinding = JSON.parseObject(json, CaseWhenBinding.class);
+
+
+        String templateStr = "select\n" +
+                "   #{dimCol(\"order_id\",\"订单id\",\"t1.order_id\",\"sqla\")},\n" +
+                "   #{dimCol(\"user_id\",\"用户id\",\"t1.user_id\",\"sqla\")},\n" +
+                "   #{kpiCol(\"kpi1\",\"消费总金额\",\"sum(t1.amount)\")}" +
+                "   \n" +
+                "from test t1 #{groupBy(\"sqla\")}";
+        GroupTemplate groupTemplate = BeetlCore.groupTemplateInit();
+        //获取模板
+        Template template = groupTemplate.getTemplate(templateStr);
+        HashMap<Object, Object> caseWhenMap = new HashMap<>();
+        caseWhenMap.put(caseWhenBinding.getCode(), caseWhenBinding);
+        template.getCtx().set("CASE_WHEN", caseWhenMap);
+        //渲染结果
+        String result = template.render();
+        Context ctx = template.getCtx();
+        Map<String, Object> globalVar = ctx.globalVar;
+        System.out.println(globalVar.toString());
+        System.out.println("---------- sql ----------");
         System.out.println(result);
 
     }

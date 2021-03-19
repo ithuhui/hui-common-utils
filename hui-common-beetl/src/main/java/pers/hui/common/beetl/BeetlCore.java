@@ -5,9 +5,7 @@ import org.beetl.core.Context;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.resource.StringTemplateResourceLoader;
-import pers.hui.common.beetl.fun.DimColFun;
-import pers.hui.common.beetl.fun.KpiColFun;
-import pers.hui.common.beetl.fun.WhereFun;
+import pers.hui.common.beetl.fun.*;
 import pers.hui.common.beetl.model.ValBinding;
 
 import java.io.IOException;
@@ -38,6 +36,8 @@ public class BeetlCore {
         groupTemplate.registerFunction("dimCol", new DimColFun());
         groupTemplate.registerFunction("kpiCol", new KpiColFun());
         groupTemplate.registerFunction("where", new WhereFun());
+        groupTemplate.registerFunction("test", new DynamicRouteFun());
+        groupTemplate.registerFunction("groupBy", new GroupByFun());
         return groupTemplate;
     }
 

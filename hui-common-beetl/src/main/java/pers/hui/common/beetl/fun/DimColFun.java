@@ -54,13 +54,16 @@ public class DimColFun implements Function {
         assert code != null;
         // 设置到全局变量 key = DIM_${code}
         String key = DIM_SYMBOL.concat(code);
+        String resVal = caseWhenHandle(code, context);
+
         FunFieldVal funFieldVal = FunFieldVal.builder()
                 .code(String.valueOf(paramsList.get(0)))
                 .comment(String.valueOf(paramsList.get(1)))
                 .val(String.valueOf(paramsList.get(2)))
+                .resVal(resVal)
                 .build();
         context.set(key, funFieldVal);
-        return caseWhenHandle(code, context);
+        return resVal;
     }
 
 
@@ -99,7 +102,6 @@ public class DimColFun implements Function {
             CaseWhenBinding childCaseWhenBinding = caseWhenVal.getChildCaseWhenBinding();
             if (null != childCaseWhenBinding) {
                 thenVal = recursion(childCaseWhenBinding);
-                System.out.println(thenVal);
             }
             whenThen.append(String.format(" when %s then %s \n", whenVal, thenVal));
         }

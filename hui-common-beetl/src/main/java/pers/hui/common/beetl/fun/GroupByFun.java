@@ -2,6 +2,10 @@ package pers.hui.common.beetl.fun;
 
 import org.beetl.core.Context;
 import org.beetl.core.Function;
+import pers.hui.common.beetl.model.FunFieldVal;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <code>GroupByFun</code>
@@ -14,6 +18,8 @@ import org.beetl.core.Function;
  */
 public class GroupByFun implements Function {
 
+    private static final String DIM_SYMBOL = "DIM_";
+
     /**
      * 形式： #{ groupBy("group")} %>
      * @param params 入参
@@ -22,6 +28,16 @@ public class GroupByFun implements Function {
      */
     @Override
     public Object call(Object[] params, Context ctx) {
-        return null;
+        String group = String.valueOf(params[0]);
+//        GroupInfo groupInfo = (GroupInfo) ctx.getGlobal(DIM_SYMBOL + group);
+//        List<String> dimCodeList = groupInfo.getDimCodeList();
+        StringBuilder res = new StringBuilder("\ngroup by \n");
+        List<String> dimCodeList = Arrays.asList("user_id", "order_id");
+        for (String dimCode : dimCodeList) {
+            FunFieldVal funFieldVal = (FunFieldVal) ctx.getGlobal(DIM_SYMBOL + dimCode);
+            res.append(funFieldVal.getResVal());
+            res.append(",");
+        }
+        return res;
     }
 }

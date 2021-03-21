@@ -3,9 +3,15 @@ package pers.hui.common.beetl.fun;
 import org.beetl.core.Context;
 import org.beetl.core.Function;
 import pers.hui.common.beetl.model.FunFieldVal;
+import pers.hui.common.beetl.model.GroupInfo;
+import pers.hui.common.beetl.model.SqlKey;
+import pers.hui.common.beetl.model.info.GroupBy;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <code>GroupByFun</code>
@@ -29,15 +35,14 @@ public class GroupByFun implements Function {
     @Override
     public Object call(Object[] params, Context ctx) {
         String group = String.valueOf(params[0]);
-//        GroupInfo groupInfo = (GroupInfo) ctx.getGlobal(DIM_SYMBOL + group);
-//        List<String> dimCodeList = groupInfo.getDimCodeList();
+        GroupBy groupBy = (GroupBy) ctx.getGlobal(SqlKey.GROUP_BY.name());
+        Map<String, Set<String>> groupBindingMap = groupBy.getGroupBindingMap();
+        Set<String> dimCodeSet = groupBindingMap.get(group);
         StringBuilder res = new StringBuilder("\ngroup by \n");
-        List<String> dimCodeList = Arrays.asList("user_id", "order_id");
-        for (String dimCode : dimCodeList) {
-            FunFieldVal funFieldVal = (FunFieldVal) ctx.getGlobal(DIM_SYMBOL + dimCode);
-            res.append(funFieldVal.getResVal());
-            res.append(",");
-        }
-        return res;
+        String groupByVal = dimCodeSet.stream()
+                .map(dimCode -> (FunFieldVal) ctx.getGlobal(DIM_SYMBOL + dimCode))
+                .map(FunFieldVal::getResVal)
+                .collect(Collectors.joining(","));
+        return res.append(groupByVal);
     }
 }

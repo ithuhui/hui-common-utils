@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * <code>DynamicRouteFun</code>
  * <desc>
- * 描述：
+ * 描述： 不需要实现 在模板定界符内按规则写好即可
  * <desc/>
  * <b>Creation Time:</b> 2021/3/17 11:31.
  *

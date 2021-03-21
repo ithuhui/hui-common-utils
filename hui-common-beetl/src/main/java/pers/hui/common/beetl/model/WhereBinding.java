@@ -2,8 +2,6 @@ package pers.hui.common.beetl.model;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * <code>WhereBinding</code>
  * <desc>
@@ -14,7 +12,7 @@ import java.util.List;
  * @author Ken.Hu
  */
 @Data
-public class WhereBinding extends ValBinding{
+public class WhereBinding extends SqlBinding {
     private String order;
     private String symbol;
     private String val1;

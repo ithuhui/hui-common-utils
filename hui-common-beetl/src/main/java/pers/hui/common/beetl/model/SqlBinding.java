@@ -12,7 +12,7 @@ import lombok.Data;
  * @author Gary.Hu
  */
 @Data
-public abstract class ValBinding {
+public abstract class SqlBinding {
     private String code;
     private String value;
 }

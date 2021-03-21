@@ -6,7 +6,9 @@ import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.resource.StringTemplateResourceLoader;
 import pers.hui.common.beetl.fun.*;
-import pers.hui.common.beetl.model.ValBinding;
+import pers.hui.common.beetl.model.info.GroupBy;
+import pers.hui.common.beetl.model.SqlKey;
+import pers.hui.common.beetl.model.info.BindingInfo;
 
 import java.io.IOException;
 import java.util.Map;
@@ -20,10 +22,11 @@ import java.util.Map;
  *
  * @author Ken.Hu
  */
-public class BeetlCore {
+public class BeetlSqlParseUtils {
 
     /**
      * 初始化模板工具类
+     *
      * @return
      * @throws IOException
      */
@@ -38,11 +41,13 @@ public class BeetlCore {
         groupTemplate.registerFunction("where", new WhereFun());
         groupTemplate.registerFunction("test", new DynamicRouteFun());
         groupTemplate.registerFunction("groupBy", new GroupByFun());
+        groupTemplate.registerFunction("includeSub", new IncludeFun());
         return groupTemplate;
     }
 
     /**
      * 通过文本获取字段值信息
+     *
      * @param content
      * @throws IOException
      */
@@ -53,7 +58,18 @@ public class BeetlCore {
         return ctx.globalVar;
     }
 
-    public static void customRender(String content, ValBinding valBinding) throws IOException {
+    public static String renderWithBinding(String content, BindingInfo bindingInfo) throws IOException {
+        GroupTemplate groupTemplate = groupTemplateInit();
 
+        Template template = groupTemplate.getTemplate(content);
+
+        template.getCtx().set(SqlKey.INCLUDE.name(),bindingInfo.getInclude());
+        template.getCtx().set(SqlKey.KPI.name(),bindingInfo.getKpi());
+        template.getCtx().set(SqlKey.DIM.name(),bindingInfo.getDim());
+        template.getCtx().set(SqlKey.WHERE.name(),bindingInfo.getWhere());
+        template.getCtx().set(SqlKey.GROUP_BY.name(),new GroupBy(bindingInfo.getDim()));
+
+        return template.render();
     }
+
 }

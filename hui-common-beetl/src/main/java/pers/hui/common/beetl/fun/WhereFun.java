@@ -2,14 +2,11 @@ package pers.hui.common.beetl.fun;
 
 import org.beetl.core.Context;
 import org.beetl.core.Function;
+import pers.hui.common.beetl.model.SqlKey;
 import pers.hui.common.beetl.model.WhereBinding;
-import pers.hui.common.beetl.model.WhereInfo;
-import pers.hui.common.beetl.model.casewhen.CaseWhenBinding;
+import pers.hui.common.beetl.model.info.Where;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * <code>WhereFun</code>
@@ -36,9 +33,9 @@ public class WhereFun implements Function {
     @SuppressWarnings("unchecked")
     public Object call(Object[] params, Context context) {
         String group = String.valueOf(params[0]);
-        WhereInfo whereInfo = (WhereInfo) context.globalVar.get(WHERE_SYMBOL.concat("_").concat(group));
-        String whereExpression = whereInfo.getExpression();
-        List<WhereBinding> whereBindings = whereInfo.getWhereBindings();
+        Where where = (Where) context.getGlobal(SqlKey.WHERE.name());
+        String whereExpression = where.getExpression();
+        List<WhereBinding> whereBindings = where.getWhereBindings();
         for (WhereBinding whereBinding : whereBindings) {
             String expression;
             if (whereBinding.getSymbol().equals("between")) {

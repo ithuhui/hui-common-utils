@@ -1,4 +1,4 @@
-package pers.hui.common.beetl.model.casewhen;
+package pers.hui.common.beetl.model;
 
 import lombok.Data;
 

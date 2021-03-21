@@ -2,10 +2,8 @@ package pers.hui.common.beetl.fun;
 
 import org.beetl.core.Context;
 import org.beetl.core.Function;
-import pers.hui.common.beetl.model.FunFieldVal;
-import pers.hui.common.beetl.model.casewhen.CaseWhenBinding;
-import pers.hui.common.beetl.model.casewhen.WhenVal;
-import pers.hui.common.beetl.model.casewhen.WhenValField;
+import pers.hui.common.beetl.model.*;
+import pers.hui.common.beetl.model.info.Dim;
 
 import java.util.Arrays;
 import java.util.List;
@@ -77,12 +75,13 @@ public class DimColFun implements Function {
      */
     @SuppressWarnings("unchecked")
     private String caseWhenHandle(String code, Context context) {
-        Map<String, Object> globalVar = context.globalVar;
-        Map<String, CaseWhenBinding> valBindingMap = (Map<String, CaseWhenBinding>) globalVar.get(CASE_WHEN_SYMBOL);
-        if (null == valBindingMap || !valBindingMap.containsKey(code)) {
+        Dim dim = (Dim) context.getGlobal(SqlKey.DIM.name());
+        Map<String, DimBinding> dimBindingMap = dim.getDimBindingMap();
+        DimBinding dimBinding = dimBindingMap.get(code);
+        CaseWhenBinding caseWhenBinding = dimBinding.getCaseWhenBinding();
+        if (null == caseWhenBinding) {
             return code;
         }
-        CaseWhenBinding caseWhenBinding = valBindingMap.get(code);
         return recursion(caseWhenBinding);
     }
 

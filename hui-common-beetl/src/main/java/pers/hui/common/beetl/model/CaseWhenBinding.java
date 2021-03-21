@@ -1,7 +1,6 @@
-package pers.hui.common.beetl.model.casewhen;
+package pers.hui.common.beetl.model;
 
 import lombok.Data;
-import pers.hui.common.beetl.model.ValBinding;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ import java.util.List;
  * @author Gary.Hu
  */
 @Data
-public class CaseWhenBinding extends ValBinding {
+public class CaseWhenBinding extends SqlBinding {
     /**
      * DEMO:
      * CASE

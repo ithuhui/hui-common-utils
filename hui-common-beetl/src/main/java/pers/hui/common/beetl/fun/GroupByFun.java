@@ -2,14 +2,13 @@ package pers.hui.common.beetl.fun;
 
 import org.beetl.core.Context;
 import org.beetl.core.Function;
-import pers.hui.common.beetl.model.FunFieldVal;
-import pers.hui.common.beetl.model.GroupInfo;
-import pers.hui.common.beetl.model.SqlKey;
-import pers.hui.common.beetl.model.info.GroupBy;
+import pers.hui.common.beetl.FunType;
+import pers.hui.common.beetl.FunVal;
+import pers.hui.common.beetl.ParseCons;
+import pers.hui.common.beetl.SqlContext;
+import pers.hui.common.beetl.utils.ParseUtils;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,26 +22,37 @@ import java.util.stream.Collectors;
  * @author Gary.Hu
  */
 public class GroupByFun implements Function {
-
-    private static final String DIM_SYMBOL = "DIM_";
-
     /**
-     * 形式： #{ groupBy("group")} %>
-     * @param params 入参
-     * @param ctx 模板上下文
+     * #{ groupBy("group")} %>
+     *
+     * @param params  入参
+     * @param context 模板上下文
      * @return 解析成功的字符串
      */
     @Override
-    public Object call(Object[] params, Context ctx) {
+    public Object call(Object[] params, Context context) {
+        SqlContext sqlContext = SqlContext.instance(context);
         String group = String.valueOf(params[0]);
-        GroupBy groupBy = (GroupBy) ctx.getGlobal(SqlKey.GROUP_BY.name());
-        Map<String, Set<String>> groupBindingMap = groupBy.getGroupBindingMap();
-        Set<String> dimCodeSet = groupBindingMap.get(group);
-        StringBuilder res = new StringBuilder("\ngroup by \n");
-        String groupByVal = dimCodeSet.stream()
-                .map(dimCode -> (FunFieldVal) ctx.getGlobal(DIM_SYMBOL + dimCode))
-                .map(FunFieldVal::getResVal)
-                .collect(Collectors.joining(","));
-        return res.append(groupByVal);
+
+        FunVal funVal = FunVal.builder()
+                .originVals(params)
+                .key(ParseUtils.keyGen(FunType.GROUP_BY, group))
+                .group(group)
+                .build();
+
+        if (sqlContext.needParse(FunType.GROUP_BY)) {
+            Set<String> allDimCodes = getAllDimCodes(group, sqlContext);
+
+            return ParseCons.EMPTY_STR;
+        } else {
+            return ParseCons.EMPTY_STR;
+        }
+    }
+
+    private Set<String> getAllDimCodes(String group, SqlContext sqlContext) {
+        List<FunVal> funVals = sqlContext.getFunVals(FunType.DIM);
+        return funVals.stream()
+                .filter(funVal -> funVal.getGroup().equals(group))
+                .map(FunVal::getCode).collect(Collectors.toSet());
     }
 }

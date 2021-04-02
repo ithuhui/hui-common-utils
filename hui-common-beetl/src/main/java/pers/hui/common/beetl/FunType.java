@@ -1,4 +1,4 @@
-package pers.hui.common.beetl.model;
+package pers.hui.common.beetl;
 
 /**
  * <code>SqlKey</code>
@@ -9,20 +9,17 @@ package pers.hui.common.beetl.model;
  *
  * @author Ken.Hu
  */
-public enum SqlKey {
+public enum FunType {
 
     /**
      * Include基础模板/变量模板
      */
-    INCLUDE,
+    INCLUDE_BASE,
+    INCLUDE_GLOBAL_VAL,
     DIM,
     KPI,
     WHERE,
+    WHERE_DEFINE,
     GROUP_BY,
     ;
-
-    @Override
-    public String toString() {
-        return this.name();
-    }
 }

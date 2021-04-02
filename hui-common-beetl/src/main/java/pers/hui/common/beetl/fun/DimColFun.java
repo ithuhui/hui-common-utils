@@ -2,13 +2,13 @@ package pers.hui.common.beetl.fun;
 
 import org.beetl.core.Context;
 import org.beetl.core.Function;
-import pers.hui.common.beetl.model.*;
-import pers.hui.common.beetl.model.info.Dim;
+import pers.hui.common.beetl.*;
+import pers.hui.common.beetl.binding.DimBinding;
+import pers.hui.common.beetl.utils.ParseUtils;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+
 
 /**
  * <code>DimFun</code>
@@ -24,72 +24,63 @@ import java.util.stream.Collectors;
  */
 public class DimColFun implements Function {
 
-    private static final String DIM_SYMBOL = "DIM_";
-    private static final String CASE_WHEN_SYMBOL = "CASE_WHEN";
-    private static final int NO_GROUP_LEN = 3;
-    private static final int HAVE_GROUP_LEN = 4;
 
     /**
-     * 形式： #{ dimCol("user_id","用户id","t1.user_id","sqla")} %>
+     * #{ dim("user_id","用户id","t1.user_id","sqla",true)} %>
      *
-     * @param objects
-     * @param context
-     * @return
+     * @param params  入参列表
+     * @param context 模板上下文
+     * @return 解析后的内容
      */
     @Override
-    public Object call(Object[] objects, Context context) {
-        List<Object> paramsList = Arrays.asList(objects);
-        int len = objects.length;
-        assert len >= NO_GROUP_LEN;
-        if (len == NO_GROUP_LEN) {
-            // TODO
-        }
+    public Object call(Object[] params, Context context) {
+        SqlContext sqlContext = SqlContext.instance(context);
 
-        if (len == HAVE_GROUP_LEN) {
-            // TODO 考虑union all的场景
-        }
-        String code = String.valueOf(objects[0]);
-        assert code != null;
-        // 设置到全局变量 key = DIM_${code}
-        String key = DIM_SYMBOL.concat(code);
-        String resVal = caseWhenHandle(code, context);
 
-        FunFieldVal funFieldVal = FunFieldVal.builder()
-                .code(String.valueOf(paramsList.get(0)))
-                .comment(String.valueOf(paramsList.get(1)))
-                .val(String.valueOf(paramsList.get(2)))
-                .resVal(resVal)
+        String code = String.valueOf(params[0]);
+        String comment = String.valueOf(params[1]);
+        String val = String.valueOf(params[2]);
+        String group = String.valueOf(params[3]);
+        String key = ParseUtils.keyGen(group, code);
+        Boolean isOutput = true;
+        // 构建解析前的信息
+        FunVal funVal = FunVal.builder()
+                .originVals(params)
+                .key(key)
+                .val(val)
+                .comment(comment)
+                .code(code)
+                .group(group)
                 .build();
-        context.set(key, funFieldVal);
-        return resVal;
-    }
 
+        sqlContext.addFunVal(FunType.DIM, funVal);
 
-    /**
-     * caseWhen处理，从全局变量获取到是否需要转换caseWhen字段
-     * 1. case when col = 'x'
-     * 2. case when col1 = '2' and col2 > 10
-     *
-     * @param code
-     * @param context
-     */
-    @SuppressWarnings("unchecked")
-    private String caseWhenHandle(String code, Context context) {
-        Dim dim = (Dim) context.getGlobal(SqlKey.DIM.name());
-        Map<String, DimBinding> dimBindingMap = dim.getDimBindingMap();
-        DimBinding dimBinding = dimBindingMap.get(code);
-        CaseWhenBinding caseWhenBinding = dimBinding.getCaseWhenBinding();
-        if (null == caseWhenBinding) {
-            return code;
+        if (params.length == 5) {
+            isOutput = (Boolean) params[4];
         }
-        return recursion(caseWhenBinding);
+
+        if (!isOutput) {
+            return ParseCons.EMPTY_STR;
+        }
+        if (sqlContext.needParse(FunType.DIM)) {
+            DimBinding dimBinding = (DimBinding) sqlContext.getBindingInfoMap(FunType.DIM).get(funVal.getKey());
+            DimBinding.CaseWhenBinding caseWhenBinding = dimBinding.getCaseWhenBinding();
+            if (null == caseWhenBinding) {
+                return val;
+            }
+            String parseResult = recursion(caseWhenBinding);
+            sqlContext.setParseVal(FunType.DIM, key, parseResult);
+            return parseResult;
+        } else {
+            return ParseCons.EMPTY_STR;
+        }
     }
 
-    private String recursion(CaseWhenBinding caseWhenBinding) {
-        List<WhenVal> caseWhenValList = caseWhenBinding.getWhenValList();
+    private String recursion(DimBinding.CaseWhenBinding caseWhenBinding) {
+        List<DimBinding.WhenVal> caseWhenValList = caseWhenBinding.getWhenValList();
         StringBuilder whenThen = new StringBuilder();
-        for (WhenVal caseWhenVal : caseWhenValList) {
-            List<WhenValField> whenValFieldList = caseWhenVal.getWhenValFieldList();
+        for (DimBinding.WhenVal caseWhenVal : caseWhenValList) {
+            List<DimBinding.WhenValField> whenValFieldList = caseWhenVal.getWhenValFieldList();
             List<String> whenValList = whenValFieldList.stream().map(whenField -> {
                 String code = whenField.getCode();
                 String symbol = whenField.getSymbol();
@@ -98,7 +89,7 @@ public class DimColFun implements Function {
             }).collect(Collectors.toList());
             String whenVal = String.join(" and ", whenValList);
             String thenVal = "'" + caseWhenVal.getThenVal() + "'";
-            CaseWhenBinding childCaseWhenBinding = caseWhenVal.getChildCaseWhenBinding();
+            DimBinding.CaseWhenBinding childCaseWhenBinding = caseWhenVal.getChildCaseWhenBinding();
             if (null != childCaseWhenBinding) {
                 thenVal = recursion(childCaseWhenBinding);
             }
@@ -106,11 +97,13 @@ public class DimColFun implements Function {
         }
         String elseVal = "'" + caseWhenBinding.getElseVal() + "'";
 
-        String code = caseWhenBinding.getCode();
-        String alias = "as " + code;
-        if (null == code) {
+
+        String value = caseWhenBinding.getAlise();
+        String alias = "as " + value;
+        if (null == value) {
             alias = "";
         }
         return String.format("case %s else %s end %s", whenThen, elseVal, alias);
     }
+
 }

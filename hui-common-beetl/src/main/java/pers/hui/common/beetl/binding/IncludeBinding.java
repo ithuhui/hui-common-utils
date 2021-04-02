@@ -1,4 +1,4 @@
-package pers.hui.common.beetl.model;
+package pers.hui.common.beetl.binding;
 
 import lombok.Data;
 
@@ -7,11 +7,12 @@ import lombok.Data;
  * <desc>
  * 描述：
  * <desc/>
- * <b>Creation Time:</b> 2021/3/19 21:51.
+ * <b>Creation Time:</b> 2021/4/3 0:33.
  *
  * @author Ken.Hu
  */
 @Data
-public class IncludeBinding extends SqlBinding{
+public class IncludeBinding implements BindingInfo{
+    private String code;
     private String includeContent;
 }

@@ -21,6 +21,9 @@ import java.util.Map;
  * @author Gary.Hu
  */
 public class KpiColFun implements Function {
+    private static final int ROUTE_OUTPUT_FLAG_LENGTH = 5;
+    private static final int ROUTE_OUTPUT_FLAG_INDEX = 4;
+    
     /**
      * 形式： #{kpi("kpi1","消费总金额","sum(t1.amount)","sqla",true)}
      *
@@ -52,14 +55,30 @@ public class KpiColFun implements Function {
                 .build();
 
         sqlContext.addFunVal(FunType.DIM, funVal);
-        if (params.length == 5) {
-            isOutput = (Boolean) params[4];
+
+        if (!needOutput(params)) {
+            return ParseCons.EMPTY_STR;
         }
 
-        if (!isOutput) {
+        if (!sqlContext.needParse(FunType.DIM)) {
             return ParseCons.EMPTY_STR;
         }
         return parse(key, sqlContext);
+    }
+
+    /**
+     * 是否需要输出字段
+     *
+     * @param params 解析入参
+     * @return 是否需要输出字段
+     */
+    private boolean needOutput(Object[] params) {
+        boolean isOutput = true;
+        // 需要路由的情况
+        if (params.length == ROUTE_OUTPUT_FLAG_LENGTH) {
+            isOutput = (Boolean) params[ROUTE_OUTPUT_FLAG_INDEX];
+        }
+        return isOutput;
     }
 
     private String parse(String key, SqlContext sqlContext) {

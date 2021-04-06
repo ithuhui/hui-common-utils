@@ -1,0 +1,126 @@
+with
+#{include("base","t_time")},
+#{include("base","t_product")},
+#{include("base","t_store")},
+#{include("base","t_member")},
+#{include("base","t_vat")}
+
+  t_cross_base as
+  (
+    select
+      txn.member_key,
+      <% if (sqla_grp_out==true && sqla_dept_out==false && sqla_cla_out==false){ %>
+        p.product_hier_1_l4_name as grp,
+      <% } %>
+      <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==false){ %>
+        decode(grouping(p.product_hier_1_l4_name), 1, 'Sub Total', p.product_hier_1_l4_name) as grp,
+        decode(grouping(p.product_hier_1_l3_name), 1, 'Sub Total', p.product_hier_1_l3_name) as dept,
+      <% } %>
+      <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==true){ %>
+        decode(grouping(p.product_hier_1_l4_name), 1, 'Sub Total', p.product_hier_1_l4_name) as grp,
+        decode(grouping(p.product_hier_1_l3_name), 1, 'Sub Total', p.product_hier_1_l3_name) as dept,
+        decode(grouping(p.product_hier_1_l2_name), 1, 'Sub Total', p.product_hier_1_l2_name) as cla,
+      <% } %>
+      sum(
+        (nvl(txn.item_amt, 0) + nvl(txn.item_staff_discount_amt, 0) + nvl(txn.item_staff_discount_2_amt, 0))
+        /
+        decode(v.vat_rate, null, 1, 1 + v.vat_rate / 100)
+      ) as sales_excl_vat
+    from
+       crm_target.b_transaction txn
+      ,t_time                   t
+      ,t_product                p
+      --,t_store                  s
+      --,t_member                 m
+      ,t_vat                    v
+    where 1=1
+      and txn.business_dt_key = t.date_key
+      and txn.product_key     = p.product_key
+      --and txn.store_key       = s.store_key
+      --and txn.member_key      = m.member_key
+      and txn.product_key     = v.product_key (+)
+      and to_date(txn.business_dt_key,'yyyymmdd') between v.begin_date (+) and v.end_date (+)
+      and txn.transaction_type_name = 'Item'
+      and txn.member_sale_flag      = 'Y'
+    group by
+      txn.member_key,
+      p.product_hier_1_l4_name
+      <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==false){ %>
+        ,rollup(p.product_hier_1_l3_name)
+      <% } %>
+      <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==true){ %>
+        ,rollup(
+                p.product_hier_1_l3_name,
+                p.product_hier_1_l2_name
+              )
+      <% } %>
+  )
+
+
+(
+    (
+        select <% if (sqla_grp_out==true ){%>
+               #{dim("grp","1级品类","t1.grp,","sqla")}
+               #{dim("cross_grp","cross1级品类","decode(t2.grp, null, 'Only', t2.grp)   as cross_grp,","sqla")}
+               <% } %>
+               <% if (sqla_grp_out==true && sqla_dept_out==true){%>
+               #{dim("dept","2级品类","t1.dept,","sqla")}
+               #{dim("cross_dept","cross2级品类","decode(t2.dept, null, 'Only', t2.dept) as cross_dept,","sqla")}
+               <% } %>
+               <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==true){ %>
+               #{dim("cla","3级品类","t1.cla,","sqla")}
+               #{dim("cross_cla","cross3级品类","decode(t2.cla, null, 'Only', t2.cla)   as cross_cla,","sqla")}
+               <% } %>
+               #{kpi("member","会员","count(distinct t1.member_key) as member,","sqla")}
+               #{kpi("sales_excl_vat","销售金额","sum(t1.sales_excl_vat) as sales_excl_vat,","sqla")}
+               #{kpi("cross_sales_excl_vat","cross销售金额","sum(t2.sales_excl_vat) as cross_sales_excl_vat,","sqla")}
+        from t_cross_base t1
+                 left join
+             t_cross_base t2
+             on
+                 (
+                             t1.member_key = t2.member_key
+                             <% if (sqla_grp_out==true && sqla_dept_out==false && sqla_cla_out==false){ %>
+                             and
+                             t1.grp <> t2.grp
+                             <% } %>
+                             <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==false){ %>
+                             and
+                             t1.grp || t1.dept <> t2.grp || t2.grp
+                             and
+                             t1.grp || '-' || t1.dept not like t2.grp || '-' || decode(t2.dept, 'Sub Total', '%', t2.dept)
+                             and
+                             t2.grp || '-' || t2.dept not like t1.grp || '-' || decode(t1.dept, 'Sub Total', '%', t1.dept)
+                             <% } %>
+                             <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==true){ %>
+                             and
+                             t1.grp || '-' || t1.dept || '-' || t1.cla not like t2.grp || '-' || decode(t2.dept, 'Sub Total', '%', t2.dept) || '-' || decode(t2.cla, 'Sub Total', '%', t2.cla)
+                             and
+                             t2.grp || '-' || t2.dept || '-' || t2.cla not like t1.grp || '-' || decode(t1.dept, 'Sub Total', '%', t1.dept) || '-' || decode(t1.cla, 'Sub Total', '%', t1.cla)
+                             <% } %>
+                     )
+        group by
+        #{groupBy("sqla")}
+    )
+    union all
+    (
+        select <% if (sqlb_grp_out==true){ %>
+               #{dim("grp","1级品类","t1.grp,","sqlb")}
+               #{dim("cross_grp","cross1级品类","'Total' as cross_grp,","sqlb")}
+               <% } %>
+               <% if (sqlb_grp_out==true && sqlb_dept_out==true){ %>
+               #{dim("dept","2级品类","t1.cla,","sqlb")}
+               #{dim("cross_dept","cross2级品类","'Total' as cross_dept,","sqlb")}
+               <% } %>
+               <% if (sqlb_grp_out==true && sqlb_dept_out==true && sqlb_cla_out==true){ %>
+               #{dim("cla","3级品类","t1.cla,","sqlb")}
+               #{dim("cross_dept","cross3级品类","'Total' as cross_dept,","sqlb")}
+               <% } %>
+               #{kpi("member","会员","count(distinct t1.member_key) as member,","sqlb")}
+               #{kpi("sales_excl_vat","销售金额","sum(t1.sales_excl_vat) as sales_excl_vat,","sqlb")}
+               #{kpi("cross_sales_excl_vat","cross销售金额","null as cross_sales_excl_vat,","sqlb")}
+        from t_cross_base t1
+        group by
+        #{groupBy("sqlb")}
+    )
+)

@@ -1,6 +1,7 @@
 package pers.hui.common.beetl.utils;
 
 import pers.hui.common.beetl.FunType;
+import pers.hui.common.beetl.FunVal;
 
 import java.util.UUID;
 
@@ -28,4 +29,8 @@ public class ParseUtils {
         return  UUID.nameUUIDFromBytes((keyStr).getBytes()).toString();
     }
 
+    public static String genOutPutVal(FunVal funVal) {
+        String key = funVal.getGroup();
+        return key.concat("_").concat(funVal.getCode()).concat("_").concat("out");
+    }
 }

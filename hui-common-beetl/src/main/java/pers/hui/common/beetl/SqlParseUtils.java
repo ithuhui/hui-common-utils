@@ -6,10 +6,11 @@ import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.exception.BeetlException;
 import org.beetl.core.resource.StringTemplateResourceLoader;
+import pers.hui.common.beetl.binding.Binding;
 import pers.hui.common.beetl.fun.*;
+import pers.hui.common.beetl.utils.ParseUtils;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,21 +61,29 @@ public class SqlParseUtils {
         return groupTemplate;
     }
 
-    public static Map<FunType, SqlParseInfo> getFunValMap(String content) throws IOException {
+    /**
+     * 获取sql解析情况
+     *
+     * @param content
+     * @return
+     * @throws IOException
+     */
+    public static Map<String, FunVal> getFunValMap(String content) throws IOException {
         String contextNew = extractTextByRegex(content);
         GroupTemplate groupTemplate = groupTemplateInit();
-        groupTemplate.getSharedVars().put(ParseCons.INFO,new HashMap<FunType, SqlParseInfo>(FunType.values().length));
 
-        System.out.println(contextNew);
         Template template = groupTemplate.getTemplate(contextNew);
         Context ctx = template.getCtx();
         template.render();
-
-        return SqlContext.instance(ctx).getInfo();
+        Map<FunType, SqlParseInfo> info = SqlContext.instance(ctx).getInfo();
+        SqlParseInfo sqlParseInfo = info.get(FunType.DIM);
+        return sqlParseInfo.getParseFunValMap();
     }
+
 
     /**
      * 模板引擎校验模板写法是否有异常
+     *
      * @param content
      * @return
      * @throws IOException
@@ -85,6 +94,16 @@ public class SqlParseUtils {
         return null == beetlException;
     }
 
+    private static void remarkDynamicRoute(Template template, Map<String, FunVal> parseFunValMap, Map<String, Binding> dimBindingMap) {
+        parseFunValMap.values().forEach(val -> {
+            boolean isOutput = false;
+            if (dimBindingMap.containsKey(val.getKey())) {
+                isOutput = true;
+            }
+            String outputVal = ParseUtils.genOutPutVal(val);
+            template.binding(outputVal, isOutput);
+        });
+    }
 
 
     public static String perfectParseContent(String content) {
@@ -93,6 +112,40 @@ public class SqlParseUtils {
                 .replaceAll(SYMBOL_REGEX3, "select ");
     }
 
+    public static String renderWithBinding(String content, BindingInfo bindingInfo) throws IOException {
+        Map<String, FunVal> funValMap = getFunValMap(content);
+        GroupTemplate groupTemplate = groupTemplateInit();
+        Template template = groupTemplate.getTemplate(content);
+        SqlContext sqlContext = SqlContext.instance(template.getCtx());
+        // 数据绑定保存到全局变量
+        dataBinding(sqlContext, bindingInfo);
+        // 适配动态路由
+        remarkDynamicRoute(template, funValMap, sqlContext.getBindingInfoMap(FunType.DIM));
+        return perfectParseContent(template.render());
+    }
+
+    private static void dataBinding(SqlContext sqlContext, BindingInfo bindingInfo) {
+        bindingInfo.getDimBindingInfos().forEach(binding -> {
+            FunType funType = FunType.DIM;
+            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
+        });
+        bindingInfo.getIncludeBaseBindings().forEach(binding -> {
+            FunType funType = FunType.INCLUDE_BASE;
+            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
+        });
+        bindingInfo.getIncludeGlobalValBindings().forEach(binding -> {
+            FunType funType = FunType.INCLUDE_GLOBAL_VAL;
+            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
+        });
+        bindingInfo.getKpiBindings().forEach(binding -> {
+            FunType funType = FunType.KPI;
+            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
+        });
+        bindingInfo.getWhereBindings().forEach(binding -> {
+            FunType funType = FunType.WHERE;
+            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
+        });
+    }
 
     public static String extractTextByRegex(String text) {
         String regex = "#\\{.*}";

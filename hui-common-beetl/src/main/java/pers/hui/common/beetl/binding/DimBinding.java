@@ -1,6 +1,7 @@
 package pers.hui.common.beetl.binding;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -14,10 +15,13 @@ import java.util.List;
  * @author Ken.Hu
  */
 @Data
-public class DimBinding implements BindingInfo {
+@EqualsAndHashCode(callSuper = true)
+public class DimBinding extends Binding {
     private String code;
     private String group;
     private CaseWhenBinding caseWhenBinding;
+
+
 
     @Data
     public static class CaseWhenBinding {

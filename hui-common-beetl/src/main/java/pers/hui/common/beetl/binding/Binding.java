@@ -9,5 +9,5 @@ package pers.hui.common.beetl.binding;
  *
  * @author Ken.Hu
  */
-public interface BindingInfo {
+public abstract class Binding {
 }

@@ -1,0 +1,149 @@
+{
+  "includeBaseBindings": [
+    {
+      "code": "t_time",
+      "includeContent": "select\n      #{dim(\"grptest\",\"1级品类\",\"grptest\",\"sqlc\")}\n    from\n      crm_target.b_time t\n    where\n      t.date_key = 20200101"
+    },
+    {
+      "code": "t_product",
+      "includeContent": "select\n      *\n    from\n      crm_target.b_product p\n    where\n      p.kpi_exclusion_flag = 'N'"
+    },
+    {
+      "code": "t_store",
+      "includeContent": "select\n      *\n    from\n      crm_target.b_store s"
+    },
+    {
+      "code": "t_member",
+      "includeContent": "select\n      *\n    from\n      crm_wtccn_boq.crm_member_profile m"
+    },
+    {
+      "code": "t_vat",
+      "includeContent": "select\n      *\n    from\n      crm_tableau_wtccn.dim_vat_item v"
+    },
+    {
+      "code": "t_cross_base",
+      "includeContent": " select\n      txn.member_key,\n      decode(grouping(p.product_hier_1_l4_name), 1, 'Sub Total', p.product_hier_1_l4_name) as grp,\n      decode(grouping(p.product_hier_1_l3_name), 1, 'Sub Total', p.product_hier_1_l3_name) as dept,\n      decode(grouping(p.product_hier_1_l2_name), 1, 'Sub Total', p.product_hier_1_l2_name) as cla,\n      sum(\n        (nvl(txn.item_amt, 0) + nvl(txn.item_staff_discount_amt, 0) + nvl(txn.item_staff_discount_2_amt, 0))\n        /\n        decode(v.vat_rate, null, 1, 1 + v.vat_rate / 100)\n      ) as sales_excl_vat\n    from\n       crm_target.b_transaction txn\n      ,t_time                   t\n      ,t_product                p\n      --,t_store                  s\n      --,t_member                 m\n      ,t_vat                    v\n    where 1=1\n      and txn.business_dt_key = t.date_key\n      and txn.product_key     = p.product_key\n      --and txn.store_key       = s.store_key\n      --and txn.member_key      = m.member_key\n      and txn.product_key     = v.product_key (+)\n      and to_date(txn.business_dt_key,'yyyymmdd') between v.begin_date (+) and v.end_date (+)\n      and txn.transaction_type_name = 'Item'\n      and txn.member_sale_flag      = 'Y'\n    group by\n      txn.member_key,\n      p.product_hier_1_l4_name,\n      rollup(\n        p.product_hier_1_l3_name,\n        p.product_hier_1_l2_name\n      )"
+    }
+  ],
+  "includeGlobalValBindings": [
+    {
+      "code": "code_val",
+      "includeContent": "#{addDim('','','')},#{addDim('','','')}"
+    }
+  ],
+  "dimBindingInfos": [
+    {
+      "code": "grp",
+      "group": "sqla",
+      "caseWhenBinding": null
+    },
+    {
+      "code": "dept",
+      "group": "sqla",
+      "caseWhenBinding": null
+    },
+    {
+      "code": "cla",
+      "group": "sqla",
+      "caseWhenBinding": null
+    },
+    {
+      "code": "cross_grp",
+      "group": "sqla"
+    },
+    {
+      "code": "cross_dept",
+      "group": "sqla"
+    },
+    {
+      "code": "cross_cla",
+      "group": "sqla"
+    },
+    {
+      "code": "grp",
+      "group": "sqlb",
+      "caseWhenBinding": null
+    },
+    {
+      "code": "dept",
+      "group": "sqlb",
+      "caseWhenBinding": null
+    },
+    {
+      "code": "cla",
+      "group": "sqlb",
+      "caseWhenBinding": null
+    },
+    {
+      "code": "cross_grp",
+      "group": "sqlb"
+    },
+    {
+      "code": "cross_dept",
+      "group": "sqlb"
+    },
+    {
+      "code": "cross_cla",
+      "group": "sqlb"
+    }
+  ],
+  "kpiBindings": [
+    {
+      "code": "member",
+      "group": "sqla"
+    },
+    {
+      "code": "sales_excl_vat",
+      "group": "sqla"
+    },
+    {
+      "code": "cross_sales_excl_vat",
+      "group": "sqla"
+    },
+    {
+      "code": "member",
+      "group": "sqlb"
+    },
+    {
+      "code": "sales_excl_vat",
+      "group": "sqlb",
+      "expression": " + 10"
+    },
+    {
+      "code": "cross_sales_excl_vat",
+      "group": "sqlb"
+    }
+  ],
+  "whereBindings": [
+    {
+      "expression": "1 AND 2 OR (3 AND 4)",
+      "group": "sqla",
+      "whereInfos": [
+        {
+          "code": "amount",
+          "id": "1",
+          "operator": ">",
+          "val": "10"
+        },
+        {
+          "code": "to_date(txn.business_dt_key,'yyyymmdd')",
+          "id": "2",
+          "operator": "bewteen",
+          "val": "v.begin_date (+)"
+        },
+        {
+          "code": "txn.transaction_type_name",
+          "id": "3",
+          "operator": "=",
+          "val": "Item"
+        },
+        {
+          "code": "txn.member_sale_flag",
+          "id": "4",
+          "operator": "=",
+          "val": "Y"
+        }
+      ]
+    }
+  ]
+}

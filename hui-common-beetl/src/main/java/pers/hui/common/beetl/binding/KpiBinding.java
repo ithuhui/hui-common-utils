@@ -1,6 +1,7 @@
 package pers.hui.common.beetl.binding;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * <code>KpiBinding</code>
@@ -12,7 +13,9 @@ import lombok.Data;
  * @author Ken.Hu
  */
 @Data
-public class KpiBinding implements BindingInfo{
+@EqualsAndHashCode(callSuper = true)
+public class KpiBinding extends Binding {
     private String code;
     private String group;
+    private String expression;
 }

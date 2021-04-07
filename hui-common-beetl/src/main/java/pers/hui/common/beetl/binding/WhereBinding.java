@@ -1,6 +1,7 @@
 package pers.hui.common.beetl.binding;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -14,7 +15,8 @@ import java.util.List;
  * @author Ken.Hu
  */
 @Data
-public class WhereBinding implements BindingInfo {
+@EqualsAndHashCode(callSuper = true)
+public class WhereBinding extends Binding {
     private String group;
     private String expression;
     private List<WhereInfo> whereInfos;

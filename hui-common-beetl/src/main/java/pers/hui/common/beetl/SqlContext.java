@@ -1,8 +1,9 @@
 package pers.hui.common.beetl;
 
 import org.beetl.core.Context;
-import pers.hui.common.beetl.binding.BindingInfo;
+import pers.hui.common.beetl.binding.Binding;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -37,7 +38,8 @@ public class SqlContext {
      */
     @SuppressWarnings("unchecked")
     public Map<FunType, SqlParseInfo> getInfo() {
-        return (Map<FunType, SqlParseInfo>) this.context.gt.getSharedVars().get(ParseCons.INFO);
+        Map<FunType, SqlParseInfo> sqlParseInfoMap = (Map<FunType, SqlParseInfo>) this.context.gt.getSharedVars().putIfAbsent(ParseCons.INFO, new HashMap<FunType, SqlParseInfo>());
+        return null == sqlParseInfoMap ? (Map<FunType, SqlParseInfo>) this.context.gt.getSharedVars().get(ParseCons.INFO) : sqlParseInfoMap;
     }
 
     /**
@@ -47,7 +49,8 @@ public class SqlContext {
      * @return sql解析信息
      */
     public SqlParseInfo getParseInfo(FunType funType) {
-        return getInfo().getOrDefault(funType, new SqlParseInfo());
+        SqlParseInfo sqlParseInfo = getInfo().putIfAbsent(funType, new SqlParseInfo());
+        return null == sqlParseInfo ? getInfo().get(funType) : sqlParseInfo;
     }
 
 
@@ -57,7 +60,7 @@ public class SqlContext {
      * @param funType 标签函数类型
      * @return 绑定信息 key: 唯一标识 val: 绑定信息
      */
-    public Map<String, BindingInfo> getBindingInfoMap(FunType funType) {
+    public Map<String, Binding> getBindingInfoMap(FunType funType) {
         return getParseInfo(funType).getBindingInfoMap();
     }
 
@@ -68,7 +71,7 @@ public class SqlContext {
      * @param key     唯一标识
      * @return 绑定信息
      */
-    public BindingInfo getBindingInfo(FunType funType, String key) {
+    public Binding getBindingInfo(FunType funType, String key) {
         return getParseInfo(funType).getBindingInfoMap().get(key);
     }
 
@@ -97,10 +100,10 @@ public class SqlContext {
      *
      * @param funType     方法类型
      * @param key         为一标识
-     * @param bindingInfo 绑定信息值
+     * @param binding 绑定信息值
      */
-    public void binding(FunType funType, String key, BindingInfo bindingInfo) {
-        getBindingInfoMap(funType).put(key, bindingInfo);
+    public void binding(FunType funType, String key, Binding binding) {
+        getBindingInfoMap(funType).put(key, binding);
     }
 
     /**
@@ -111,7 +114,8 @@ public class SqlContext {
      */
     public void addFunVal(FunType funType, FunVal funVal) {
         funVal.setFunType(funType);
-        getParseFunValMap(funType).put(funVal.getKey(), funVal);
+        getParseFunValMap(funType)
+                .put(funVal.getKey(), funVal);
     }
 
     /**

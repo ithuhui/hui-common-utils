@@ -60,20 +60,20 @@ with
 (
     (
         select <% if (sqla_grp_out==true ){%>
-               #{dim("grp","1级品类","t1.grp,","sqla")}
-               #{dim("cross_grp","cross1级品类","decode(t2.grp, null, 'Only', t2.grp)   as cross_grp,","sqla")}
+               #{dim("grp","1级品类","t1.grp","sqla")}
+               #{dim("cross_grp","cross1级品类","decode(t2.grp, null, 'Only', t2.grp)   as cross_grp","sqla")}
                <% } %>
                <% if (sqla_grp_out==true && sqla_dept_out==true){%>
-               #{dim("dept","2级品类","t1.dept,","sqla")}
-               #{dim("cross_dept","cross2级品类","decode(t2.dept, null, 'Only', t2.dept) as cross_dept,","sqla")}
+               #{dim("dept","2级品类","t1.dept","sqla")}
+               #{dim("cross_dept","cross2级品类","decode(t2.dept, null, 'Only', t2.dept) as cross_dept","sqla")}
                <% } %>
                <% if (sqla_grp_out==true && sqla_dept_out==true && sqla_cla_out==true){ %>
-               #{dim("cla","3级品类","t1.cla,","sqla")}
-               #{dim("cross_cla","cross3级品类","decode(t2.cla, null, 'Only', t2.cla)   as cross_cla,","sqla")}
+               #{dim("cla","3级品类","t1.cla","sqla")}
+               #{dim("cross_cla","cross3级品类","decode(t2.cla, null, 'Only', t2.cla)   as cross_cla","sqla")}
                <% } %>
-               #{kpi("member","会员","count(distinct t1.member_key) as member,","sqla")}
-               #{kpi("sales_excl_vat","销售金额","sum(t1.sales_excl_vat) as sales_excl_vat,","sqla")}
-               #{kpi("cross_sales_excl_vat","cross销售金额","sum(t2.sales_excl_vat) as cross_sales_excl_vat,","sqla")}
+               #{kpi("member","会员","count(distinct t1.member_key) as member","sqla")}
+               #{kpi("sales_excl_vat","销售金额","sum(t1.sales_excl_vat) as sales_excl_vat","sqla")}
+               #{kpi("cross_sales_excl_vat","cross销售金额","sum(t2.sales_excl_vat) as cross_sales_excl_vat","sqla")}
         from t_cross_base t1
                  left join
              t_cross_base t2
@@ -105,20 +105,20 @@ with
     union all
     (
         select <% if (sqlb_grp_out==true){ %>
-               #{dim("grp","1级品类","t1.grp,","sqlb")}
-               #{dim("cross_grp","cross1级品类","'Total' as cross_grp,","sqlb")}
+               #{dim("grp","1级品类","t1.grp","sqlb")}
+               #{dim("cross_grp","cross1级品类","'Total' as cross_grp","sqlb")}
                <% } %>
                <% if (sqlb_grp_out==true && sqlb_dept_out==true){ %>
-               #{dim("dept","2级品类","t1.cla,","sqlb")}
-               #{dim("cross_dept","cross2级品类","'Total' as cross_dept,","sqlb")}
+               #{dim("dept","2级品类","t1.cla","sqlb")}
+               #{dim("cross_dept","cross2级品类","'Total' as cross_dept","sqlb")}
                <% } %>
                <% if (sqlb_grp_out==true && sqlb_dept_out==true && sqlb_cla_out==true){ %>
-               #{dim("cla","3级品类","t1.cla,","sqlb")}
-               #{dim("cross_dept","cross3级品类","'Total' as cross_dept,","sqlb")}
+               #{dim("cla","3级品类","t1.cla","sqlb")}
+               #{dim("cross_dept","cross3级品类","'Total' as cross_dept","sqlb")}
                <% } %>
-               #{kpi("member","会员","count(distinct t1.member_key) as member,","sqlb")}
-               #{kpi("sales_excl_vat","销售金额","sum(t1.sales_excl_vat) as sales_excl_vat,","sqlb")}
-               #{kpi("cross_sales_excl_vat","cross销售金额","null as cross_sales_excl_vat,","sqlb")}
+               #{kpi("member","会员","count(distinct t1.member_key) as member","sqlb")}
+               #{kpi("sales_excl_vat","销售金额","sum(t1.sales_excl_vat) as sales_excl_vat","sqlb")}
+               #{kpi("cross_sales_excl_vat","cross销售金额","null as cross_sales_excl_vat","sqlb")}
         from t_cross_base t1
         group by
         #{groupBy("sqlb")}

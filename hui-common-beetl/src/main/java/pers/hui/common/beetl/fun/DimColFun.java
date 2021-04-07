@@ -65,8 +65,9 @@ public class DimColFun implements Function {
         if (!sqlContext.needParse(FunType.DIM)) {
             return ParseCons.EMPTY_STR;
         }
-
-        return parse(sqlContext, funVal);
+        String parseResult = parse(sqlContext, funVal);
+        sqlContext.setParseVal(FunType.DIM, funVal.getKey(), parseResult);
+        return parseResult;
     }
 
     /**
@@ -94,14 +95,15 @@ public class DimColFun implements Function {
      */
     private String parse(SqlContext sqlContext, FunVal funVal) {
         DimBinding dimBinding = (DimBinding) sqlContext.getBindingInfoMap(FunType.DIM).get(funVal.getKey());
+        if (null == dimBinding){
+            return ParseCons.EMPTY_STR;
+        }
         DimBinding.CaseWhenBinding caseWhenBinding = dimBinding.getCaseWhenBinding();
         if (null == caseWhenBinding) {
-            return funVal.getVal();
+            return funVal.getVal().concat(",");
         }
-        String parseResult = recursion(caseWhenBinding);
         // 保存解析后的值
-        sqlContext.setParseVal(FunType.DIM, funVal.getKey(), parseResult);
-        return parseResult;
+        return recursion(caseWhenBinding).concat(",");
     }
 
     /**

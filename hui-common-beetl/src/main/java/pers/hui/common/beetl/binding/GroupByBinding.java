@@ -1,6 +1,7 @@
 package pers.hui.common.beetl.binding;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Set;
 
@@ -13,8 +14,10 @@ import java.util.Set;
  *
  * @author Ken.Hu
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class GroupByBinding implements BindingInfo{
+public class GroupByBinding extends Binding {
     private String group;
     private Set<String> codes;
+
 }

@@ -1,5 +1,6 @@
 package pers.hui.common.beetl.fun;
 
+import org.apache.commons.lang3.StringUtils;
 import org.beetl.core.Context;
 import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class KpiColFun implements Function {
     private static final int ROUTE_OUTPUT_FLAG_LENGTH = 5;
     private static final int ROUTE_OUTPUT_FLAG_INDEX = 4;
-    
+
     /**
      * 形式： #{kpi("kpi1","消费总金额","sum(t1.amount)","sqla",true)}
      *
@@ -54,7 +55,7 @@ public class KpiColFun implements Function {
                 .group(group)
                 .build();
 
-        sqlContext.addFunVal(FunType.DIM, funVal);
+        sqlContext.addFunVal(FunType.KPI, funVal);
 
         if (!needOutput(params)) {
             return ParseCons.EMPTY_STR;
@@ -63,7 +64,9 @@ public class KpiColFun implements Function {
         if (!sqlContext.needParse(FunType.DIM)) {
             return ParseCons.EMPTY_STR;
         }
-        return parse(key, sqlContext);
+        String parse = parse(key, sqlContext);
+        sqlContext.setParseVal(FunType.KPI, key, parse);
+        return parse;
     }
 
     /**
@@ -88,7 +91,10 @@ public class KpiColFun implements Function {
         }
         Map<String, FunVal> parseFunValMap = sqlContext.getParseFunValMap(FunType.KPI);
         FunVal funVal = parseFunValMap.get(key);
-        return funVal.getKey();
+        if (StringUtils.isNotBlank(kpiBinding.getExpression())){
+            return funVal.getVal().concat(" " + kpiBinding.getExpression()).concat(",");
+        }
+        return funVal.getVal().concat(",");
     }
 
 }

@@ -1,6 +1,7 @@
 package pers.hui.common.beetl.binding;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * <code>IncludeBinding</code>
@@ -12,7 +13,10 @@ import lombok.Data;
  * @author Ken.Hu
  */
 @Data
-public class IncludeBinding implements BindingInfo{
+@EqualsAndHashCode(callSuper = true)
+public class IncludeBinding extends Binding {
     private String code;
     private String includeContent;
+
+
 }

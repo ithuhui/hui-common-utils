@@ -7,7 +7,7 @@ import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.BindingInfo;
+import pers.hui.common.beetl.binding.Binding;
 import pers.hui.common.beetl.binding.DimBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
@@ -53,7 +53,7 @@ public class GroupByFun implements Function {
                 .build();
         sqlContext.addFunVal(FunType.GROUP_BY, funVal);
 
-        if (!sqlContext.needParse(FunType.GROUP_BY)) {
+        if (!sqlContext.needParse(FunType.DIM)) {
             return ParseCons.EMPTY_STR;
         }
 
@@ -65,7 +65,10 @@ public class GroupByFun implements Function {
         Map<String, FunVal> parseFunValMap = sqlContext.getParseFunValMap(FunType.DIM);
 
         String parse = allDimCodes.stream()
-                .map(code -> parseFunValMap.get(ParseUtils.keyGen(code)))
+                .map(code -> {
+                    String key = ParseUtils.keyGen(group,code);
+                    return parseFunValMap.get(key);
+                })
                 .filter(Objects::nonNull)
                 .filter(f -> {
                     String resVal = f.getParseVal();
@@ -102,7 +105,7 @@ public class GroupByFun implements Function {
      * @return
      */
     private Set<String> getAllDimCodes(String group, SqlContext sqlContext) {
-        Map<String, BindingInfo> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.DIM);
+        Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.DIM);
 
         return bindingInfoMap
                 .values()

@@ -6,7 +6,7 @@ import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.BindingInfo;
+import pers.hui.common.beetl.binding.Binding;
 import pers.hui.common.beetl.binding.WhereBinding;
 
 import java.util.List;
@@ -41,7 +41,7 @@ public class WhereFun implements Function {
     public Object call(Object[] params, Context context) {
         SqlContext sqlContext = SqlContext.instance(context);
         String group = String.valueOf(params[0]);
-        Map<String, BindingInfo> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.WHERE);
+        Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.WHERE);
         if (Objects.isNull(bindingInfoMap)) {
             return ParseCons.EMPTY_STR;
         }
@@ -64,8 +64,6 @@ public class WhereFun implements Function {
         if (StringUtils.isBlank(expression)) {
             return defaultParse(whereInfos);
         }
-
-
         return parse(whereInfos, expression);
     }
 

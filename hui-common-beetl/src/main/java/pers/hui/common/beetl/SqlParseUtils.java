@@ -64,7 +64,7 @@ public class SqlParseUtils {
     /**
      * 获取sql解析情况
      *
-     * @param content
+     * @param content 解析文本
      * @return
      * @throws IOException
      */
@@ -94,6 +94,12 @@ public class SqlParseUtils {
         return null == beetlException;
     }
 
+    /**
+     * 动态路由的绑定
+     * @param template 模板
+     * @param parseFunValMap 函数元信息
+     * @param dimBindingMap DIM绑定信息
+     */
     private static void remarkDynamicRoute(Template template, Map<String, FunVal> parseFunValMap, Map<String, Binding> dimBindingMap) {
         parseFunValMap.values().forEach(val -> {
             boolean isOutput = false;

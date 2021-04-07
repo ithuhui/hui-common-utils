@@ -38,6 +38,8 @@ public class IncludeFun implements Function {
         String contentCode = String.valueOf(params[1]);
 
         String key = ParseUtils.keyGen(contentCode);
+
+
         if (type.equalsIgnoreCase(TEMPLATE_BASE)) {
             Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.INCLUDE_BASE);
             IncludeBinding bindingInfo = (IncludeBinding) bindingInfoMap.get(ParseUtils.keyGen(contentCode));
@@ -48,21 +50,23 @@ public class IncludeFun implements Function {
                     .key(key)
                     .build();
             sqlContext.addFunVal(FunType.INCLUDE_BASE, funVal);
+            if (!sqlContext.needParse(FunType.INCLUDE_BASE)) {
+                return ParseCons.EMPTY_STR;
+            }
 
 
             try {
                 Map<String, FunVal> funValMap = SqlParseUtils.getFunValMap(bindingInfo.getIncludeContent());
-                System.out.println(funValMap);
+                // 当发现标签函数的时候 需要重新进行解析
                 if (null != funValMap) {
                     // 嵌套的include函数元信息记录
                     funValMap.values().forEach(val -> sqlContext.addFunVal(val.getFunType(), val));
+                    // 对嵌套的includeContent解析一次
                     String parseV1 = parseWithFun(bindingInfo.getIncludeContent(), sqlContext);
-                    if (!sqlContext.needParse(FunType.INCLUDE_BASE)) {
-                        return ParseCons.EMPTY_STR;
-                    }
                     return parse(contentCode, parseV1);
                 }
             } catch (IOException e) {
+                e.printStackTrace();
                 return ParseCons.EMPTY_STR;
             }
             if (!sqlContext.needParse(FunType.INCLUDE_BASE)) {
@@ -71,6 +75,8 @@ public class IncludeFun implements Function {
             return parse(contentCode, bindingInfo.getIncludeContent());
         }
 
+
+        // 全局变量的情况下 直接替换文本
         if (type.equalsIgnoreCase(TEMPLATE_GLOBAL_VAL)) {
             Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.INCLUDE_GLOBAL_VAL);
             IncludeBinding bindingInfo = (IncludeBinding) bindingInfoMap.get(ParseUtils.keyGen(contentCode));
@@ -94,6 +100,14 @@ public class IncludeFun implements Function {
         return String.format("%s as ( %s )", code, includeContent);
     }
 
+
+    /**
+     * 当基础模板存在标签函数时
+     *
+     * @param includeContent 文本内容
+     * @param sqlContext     sql全局变量上下文
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private String parseWithFun(String includeContent, SqlContext sqlContext) {
 

@@ -4,6 +4,7 @@ import lombok.Data;
 import pers.hui.common.beetl.binding.Binding;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,9 +17,8 @@ import java.util.Map;
  * @author Ken.Hu
  */
 @Data
-public class SqlParseInfo {
-
-    private Map<String, Binding> bindingInfoMap = new HashMap<>();
-
+public class SqlParseInfo<T extends Binding> {
     private Map<String, FunVal> parseFunValMap = new HashMap<>();
+
+    private Map<String, List<T>> bindingMap = new HashMap<>();
 }

@@ -1,31 +1,28 @@
 package pers.hui.common.beetl.fun;
 
 import org.apache.commons.lang3.StringUtils;
-import org.beetl.core.Context;
-import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
 import pers.hui.common.beetl.binding.Binding;
 import pers.hui.common.beetl.binding.DimBinding;
+import pers.hui.common.beetl.binding.GroupByBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * <code>GroupByFun</code>
  * <desc>
- * 描述：
+ * 描述：#{ groupBy("group")} %>
  * <desc/>
  * <b>Creation Time:</b> 2021/3/17 11:31.
  *
  * @author Gary.Hu
  */
-public class GroupByFun implements Function {
+public class GroupByFun extends BaseSqlParseFun<GroupByBinding> {
 
     private static final String LOW_AS_SYMBOL = " as ";
     private static final String LOW_AS_SYMBOL2 = "'as";
@@ -34,33 +31,16 @@ public class GroupByFun implements Function {
 
     private static final String SPACE = " ";
 
-    /**
-     * #{ groupBy("group")} %>
-     *
-     * @param params  入参
-     * @param context 模板上下文
-     * @return 解析成功的字符串
-     */
     @Override
-    public Object call(Object[] params, Context context) {
-        SqlContext sqlContext = SqlContext.instance(context);
-        String group = String.valueOf(params[0]);
-        String key = ParseUtils.keyGen(FunType.GROUP_BY, group);
-        FunVal funVal = FunVal.builder()
-                .originVals(params)
-                .key(key)
-                .group(group)
-                .build();
-        sqlContext.addFunVal(FunType.GROUP_BY, funVal);
-
-        if (!sqlContext.needParse(FunType.DIM)) {
-            return ParseCons.EMPTY_STR;
-        }
-
-        return parse(sqlContext, group);
+    FunType defineFunType() {
+        return FunType.GROUP_BY;
     }
 
-    private String parse(SqlContext sqlContext, String group) {
+    @Override
+    String parse(List<FunVal> funVals, SqlContext<GroupByBinding> sqlContext) {
+        if (sqlContext.notNeededParse(FunType.DIM)) {
+            return ParseCons.EMPTY_STR;
+        }
         Set<String> allDimCodes = getAllDimCodes(group, sqlContext);
         Map<String, FunVal> parseFunValMap = sqlContext.getParseFunValMap(FunType.DIM);
 
@@ -97,6 +77,16 @@ public class GroupByFun implements Function {
         return parse;
     }
 
+    @Override
+    List<FunVal> genFunVals(Object[] params) {String group = String.valueOf(params[0]);
+        String key = ParseUtils.keyGen(FunType.GROUP_BY, group);
+        FunVal funVal = FunVal.builder()
+                .originVals(params)
+                .key(key)
+                .group(group)
+                .build();
+        return Collections.singletonList(funVal);
+    }
     /**
      * 获取所有dim字段的
      *
@@ -105,7 +95,7 @@ public class GroupByFun implements Function {
      * @return
      */
     private Set<String> getAllDimCodes(String group, SqlContext sqlContext) {
-        Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.DIM);
+        Map<String, Binding> bindingInfoMap = sqlContext.getBindingMap(FunType.DIM);
 
         return bindingInfoMap
                 .values()

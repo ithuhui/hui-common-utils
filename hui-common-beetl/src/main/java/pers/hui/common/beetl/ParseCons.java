@@ -11,5 +11,6 @@ package pers.hui.common.beetl;
  */
 public class ParseCons {
     public static final String INFO = "INFO";
+    public static final String BINDING = "BINDING";
     public static final String EMPTY_STR = "";
 }

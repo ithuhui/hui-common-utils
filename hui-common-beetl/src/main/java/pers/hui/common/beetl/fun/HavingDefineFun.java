@@ -4,7 +4,7 @@ import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.NullBinding;
+import pers.hui.common.beetl.binding.HavingBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
 import java.util.Arrays;
@@ -12,40 +12,38 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * <code>WhereDefine</code>
+ * <code>HavingDefine</code>
  * <desc>
- * 描述：定义where可选的变量
- * #{whereDefine("sqlb","t1_test","t1_test2","t1_test3")}
+ * 描述：#{havingDefine("GROUP","HAVING_COL1","HAVING_COL2")}
  * <desc/>
- * <b>Creation Time:</b> 2021/3/24 17:27.
+ * <b>Creation Time:</b> 2021/4/13 17:25.
  *
  * @author Gary.Hu
  */
-public class WhereDefineFun extends BaseSqlParseFun<NullBinding> {
+public class HavingDefineFun extends BaseSqlParseFun<HavingBinding> {
     @Override
     FunType defineFunType() {
-        return FunType.WHERE_DEFINE;
+        return FunType.HAVING_DEFINE;
     }
 
     @Override
-    String parse(List<FunVal> funVals, SqlContext<NullBinding> sqlContext) {
+    String parse(List<FunVal> funVals, SqlContext<HavingBinding> sqlContext) {
         return ParseCons.EMPTY_STR;
     }
-
 
     @Override
     List<FunVal> genFunVals(Object[] params) {
         String group = String.valueOf(params[0]);
-        Object[] whereArgs = new String[params.length - 1];
-        System.arraycopy(params, 1, whereArgs, 0, params.length - 1);
-        return Arrays.stream(whereArgs).map(whereField -> {
+        Object[] havingArgs = new String[params.length - 1];
+        System.arraycopy(params, 1, havingArgs, 0, params.length - 1);
+        return Arrays.stream(havingArgs).map(whereField -> {
             String whereFieldStr = String.valueOf(whereField);
             return FunVal.builder()
                     .group(group)
-                    .key(ParseUtils.keyGen(FunType.WHERE_DEFINE, whereFieldStr))
+                    .key(ParseUtils.keyGen(FunType.HAVING_DEFINE, whereFieldStr))
                     .code(whereFieldStr)
                     .val(whereFieldStr)
-                    .funType(FunType.WHERE_DEFINE)
+                    .funType(FunType.HAVING_DEFINE)
                     .build();
         }).collect(Collectors.toList());
     }

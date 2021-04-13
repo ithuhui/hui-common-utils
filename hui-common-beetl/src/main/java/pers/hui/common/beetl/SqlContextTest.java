@@ -3,7 +3,10 @@ package pers.hui.common.beetl;
 import org.beetl.core.Context;
 import pers.hui.common.beetl.binding.Binding;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <code>SqlContext</code>
@@ -14,18 +17,18 @@ import java.util.*;
  *
  * @author Ken.Hu
  */
-public class SqlContext<T extends Binding> {
+public class SqlContextTest<T extends Binding> {
     private final Context context;
-    private static SqlContext instance;
+    private static SqlContextTest instance;
 
-    private SqlContext(Context context) {
+    private SqlContextTest(Context context) {
         this.context = context;
     }
 
 
-    public static synchronized SqlContext instance(Context context) {
+    public static synchronized SqlContextTest instance(Context context) {
         if (instance == null) {
-            instance = new SqlContext(context);
+            instance = new SqlContextTest(context);
         }
         return instance;
     }
@@ -62,7 +65,7 @@ public class SqlContext<T extends Binding> {
     public Map<String, List<T>> getBindingMap(FunType funType) {
         return getParseInfo(funType).getBindingMap();
     }
-
+    
 
     /**
      * 获取绑定信息

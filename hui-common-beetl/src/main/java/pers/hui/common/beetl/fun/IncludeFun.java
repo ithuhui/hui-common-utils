@@ -41,7 +41,7 @@ public class IncludeFun implements Function {
 
 
         if (type.equalsIgnoreCase(TEMPLATE_BASE)) {
-            Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.INCLUDE_BASE);
+            Map<String, Binding> bindingInfoMap = sqlContext.getBindingMap(FunType.INCLUDE_BASE);
             IncludeBinding bindingInfo = (IncludeBinding) bindingInfoMap.get(ParseUtils.keyGen(contentCode));
             // 保存标签函数值
             FunVal funVal = FunVal.builder()
@@ -50,7 +50,7 @@ public class IncludeFun implements Function {
                     .key(key)
                     .build();
             sqlContext.addFunVal(FunType.INCLUDE_BASE, funVal);
-            if (!sqlContext.needParse(FunType.INCLUDE_BASE)) {
+            if (sqlContext.notNeededParse(FunType.INCLUDE_BASE)) {
                 return ParseCons.EMPTY_STR;
             }
 
@@ -69,7 +69,7 @@ public class IncludeFun implements Function {
                 e.printStackTrace();
                 return ParseCons.EMPTY_STR;
             }
-            if (!sqlContext.needParse(FunType.INCLUDE_BASE)) {
+            if (sqlContext.notNeededParse(FunType.INCLUDE_BASE)) {
                 return ParseCons.EMPTY_STR;
             }
             return parse(contentCode, bindingInfo.getIncludeContent());
@@ -78,7 +78,7 @@ public class IncludeFun implements Function {
 
         // 全局变量的情况下 直接替换文本
         if (type.equalsIgnoreCase(TEMPLATE_GLOBAL_VAL)) {
-            Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.INCLUDE_GLOBAL_VAL);
+            Map<String, Binding> bindingInfoMap = sqlContext.getBindingMap(FunType.INCLUDE_GLOBAL_VAL);
             IncludeBinding bindingInfo = (IncludeBinding) bindingInfoMap.get(ParseUtils.keyGen(contentCode));
             // 保存标签函数值
             FunVal funVal = FunVal.builder()
@@ -87,7 +87,7 @@ public class IncludeFun implements Function {
                     .key(key)
                     .build();
             sqlContext.addFunVal(FunType.INCLUDE_GLOBAL_VAL, funVal);
-            if (!sqlContext.needParse(FunType.INCLUDE_GLOBAL_VAL)) {
+            if (sqlContext.notNeededParse(FunType.INCLUDE_GLOBAL_VAL)) {
                 return ParseCons.EMPTY_STR;
             }
             return bindingInfo.getIncludeContent();
@@ -112,9 +112,9 @@ public class IncludeFun implements Function {
     private String parseWithFun(String includeContent, SqlContext sqlContext) {
 
         BindingInfo bindingInfo = new BindingInfo();
-        bindingInfo.setDimBindingInfos(sqlContext.getBindingInfoMap(FunType.DIM).values().stream().map(x -> (DimBinding) x).collect(Collectors.toList()));
-        bindingInfo.setKpiBindings(sqlContext.getBindingInfoMap(FunType.KPI).values().stream().map(x -> (KpiBinding) x).collect(Collectors.toList()));
-        bindingInfo.setWhereBindings(sqlContext.getBindingInfoMap(FunType.WHERE).values().stream().map(x -> (WhereBinding) x).collect(Collectors.toList()));
+        bindingInfo.setDimBindingInfos(sqlContext.getBindingMap(FunType.DIM).values().stream().map(x -> (DimBinding) x).collect(Collectors.toList()));
+        bindingInfo.setKpiBindings(sqlContext.getBindingMap(FunType.KPI).values().stream().map(x -> (KpiBinding) x).collect(Collectors.toList()));
+        bindingInfo.setWhereBindings(sqlContext.getBindingMap(FunType.WHERE).values().stream().map(x -> (WhereBinding) x).collect(Collectors.toList()));
         try {
             return SqlParseUtils.renderWithBinding(includeContent, bindingInfo);
         } catch (IOException e) {

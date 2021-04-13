@@ -126,7 +126,7 @@ public class SqlParseUtils {
         // 数据绑定保存到全局变量
         dataBinding(sqlContext, bindingInfo);
         // 适配动态路由
-        remarkDynamicRoute(template, funValMap, sqlContext.getBindingInfoMap(FunType.DIM));
+        remarkDynamicRoute(template, funValMap, sqlContext.getBindingMap(FunType.DIM));
         return perfectParseContent(template.render());
     }
 

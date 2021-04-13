@@ -1,5 +1,7 @@
 package pers.hui.common.beetl.binding;
 
+import pers.hui.common.beetl.FunType;
+
 /**
  * <code>BindingInfo</code>
  * <desc>
@@ -10,4 +12,5 @@ package pers.hui.common.beetl.binding;
  * @author Ken.Hu
  */
 public abstract class Binding {
+    private FunType funType;
 }

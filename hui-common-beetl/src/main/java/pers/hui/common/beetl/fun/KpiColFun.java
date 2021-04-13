@@ -1,8 +1,6 @@
 package pers.hui.common.beetl.fun;
 
 import org.apache.commons.lang3.StringUtils;
-import org.beetl.core.Context;
-import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
@@ -10,7 +8,8 @@ import pers.hui.common.beetl.SqlContext;
 import pers.hui.common.beetl.binding.KpiBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <code>DimFun</code>
@@ -21,31 +20,52 @@ import java.util.Map;
  *
  * @author Gary.Hu
  */
-public class KpiColFun implements Function {
+public class KpiColFun extends BaseSqlParseFun<KpiBinding> {
     private static final int ROUTE_OUTPUT_FLAG_LENGTH = 5;
     private static final int ROUTE_OUTPUT_FLAG_INDEX = 4;
 
-    /**
-     * 形式： #{kpi("kpi1","消费总金额","sum(t1.amount)","sqla",true)}
-     *
-     * @param params  入参
-     * @param context 模板上下文
-     * @return 解析成功的字符串
-     */
     @Override
-    public Object call(Object[] params, Context context) {
-        SqlContext sqlContext = SqlContext.instance(context);
+    FunType defineFunType() {
+        return FunType.KPI;
+    }
 
+    @Override
+    String parse(List<FunVal> funVals, SqlContext<KpiBinding> sqlContext) {
+        FunVal funVal = funVals.get(0);
+        String key = funVal.getKey();
+        Object[] params = funVal.getOriginVals();
+        if (!needOutput(params)) {
+            return ParseCons.EMPTY_STR;
+        }
+
+        if (sqlContext.notNeededParse(FunType.DIM)) {
+            return ParseCons.EMPTY_STR;
+        }
+
+        List<KpiBinding> kpiBindings = sqlContext.getBindingMap(FunType.KPI).get(key);
+        if (null == kpiBindings || kpiBindings.isEmpty()) {
+            return ParseCons.EMPTY_STR;
+        }
+
+        StringBuilder parseResult = new StringBuilder();
+        for (KpiBinding kpiBinding : kpiBindings) {
+            String result = funVal.getVal().concat(",");
+            if (StringUtils.isNotBlank(kpiBinding.getExpression())) {
+                result = funVal.getVal().concat(" " + kpiBinding.getExpression()).concat(",");
+            }
+            parseResult.append(result);
+        }
+
+        return parseResult.toString();
+    }
+
+    @Override
+    List<FunVal> genFunVals(Object[] params) {
         String code = String.valueOf(params[0]);
         String comment = String.valueOf(params[1]);
         String val = String.valueOf(params[2]);
         String group = String.valueOf(params[3]);
         String key = ParseUtils.keyGen(group, code);
-        Boolean isOutput = true;
-        if (params.length == 5) {
-            isOutput = (Boolean) params[4];
-        }
-
         FunVal funVal = FunVal.builder()
                 .originVals(params)
                 .key(key)
@@ -55,18 +75,7 @@ public class KpiColFun implements Function {
                 .group(group)
                 .build();
 
-        sqlContext.addFunVal(FunType.KPI, funVal);
-
-        if (!needOutput(params)) {
-            return ParseCons.EMPTY_STR;
-        }
-
-        if (!sqlContext.needParse(FunType.DIM)) {
-            return ParseCons.EMPTY_STR;
-        }
-        String parse = parse(key, sqlContext);
-        sqlContext.setParseVal(FunType.KPI, key, parse);
-        return parse;
+        return Collections.singletonList(funVal);
     }
 
     /**
@@ -84,17 +93,5 @@ public class KpiColFun implements Function {
         return isOutput;
     }
 
-    private String parse(String key, SqlContext sqlContext) {
-        KpiBinding kpiBinding = (KpiBinding) sqlContext.getBindingInfoMap(FunType.KPI).get(key);
-        if (null == kpiBinding) {
-            return ParseCons.EMPTY_STR;
-        }
-        Map<String, FunVal> parseFunValMap = sqlContext.getParseFunValMap(FunType.KPI);
-        FunVal funVal = parseFunValMap.get(key);
-        if (StringUtils.isNotBlank(kpiBinding.getExpression())){
-            return funVal.getVal().concat(" " + kpiBinding.getExpression()).concat(",");
-        }
-        return funVal.getVal().concat(",");
-    }
 
 }

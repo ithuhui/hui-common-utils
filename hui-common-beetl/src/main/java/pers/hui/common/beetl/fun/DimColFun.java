@@ -62,7 +62,7 @@ public class DimColFun implements Function {
             return ParseCons.EMPTY_STR;
         }
 
-        if (!sqlContext.needParse(FunType.DIM)) {
+        if (sqlContext.notNeededParse(FunType.DIM)) {
             return ParseCons.EMPTY_STR;
         }
         String parseResult = parse(sqlContext, funVal);
@@ -94,7 +94,7 @@ public class DimColFun implements Function {
      * @return
      */
     private String parse(SqlContext sqlContext, FunVal funVal) {
-        DimBinding dimBinding = (DimBinding) sqlContext.getBindingInfoMap(FunType.DIM).get(funVal.getKey());
+        DimBinding dimBinding = (DimBinding) sqlContext.getBindingMap(FunType.DIM).get(funVal.getKey());
         if (null == dimBinding){
             return ParseCons.EMPTY_STR;
         }

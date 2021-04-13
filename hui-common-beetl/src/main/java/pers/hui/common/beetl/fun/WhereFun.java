@@ -1,14 +1,13 @@
 package pers.hui.common.beetl.fun;
 
 import org.apache.commons.lang3.StringUtils;
-import org.beetl.core.Context;
-import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
+import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.Binding;
 import pers.hui.common.beetl.binding.WhereBinding;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,40 +16,35 @@ import java.util.stream.Collectors;
 /**
  * <code>WhereFun</code>
  * <desc>
- * 描述：
+ * 描述：从context获取用户定义的where字段 #{where("group")}
  * <desc/>
  * <b>Creation Time:</b> 2021/3/16 23:06.
  *
  * @author Ken.Hu
  */
-public class WhereFun implements Function {
+public class WhereFun extends BaseSqlParseFun<WhereBinding> {
 
     private static final int WHERE_BINDINGS_SIZE = 1;
 
-    /**
-     * way1: 全部字段都显示声明 ： #{whereField("code", "comment", "val", "group")}
-     * way2: 从context获取用户定义的where字段 #{where("group")}
-     * way3: 语法树解析
-     *
-     * @param params  入参
-     * @param context 模板上下文
-     * @return 解析成功的字符串
-     */
     @Override
-    @SuppressWarnings("unchecked")
-    public Object call(Object[] params, Context context) {
-        SqlContext sqlContext = SqlContext.instance(context);
-        String group = String.valueOf(params[0]);
-        Map<String, Binding> bindingInfoMap = sqlContext.getBindingInfoMap(FunType.WHERE);
-        if (Objects.isNull(bindingInfoMap)) {
+    FunType defineFunType() {
+        return FunType.WHERE;
+    }
+
+    @Override
+    String parse(List<FunVal> funVals, SqlContext<WhereBinding> sqlContext) {
+        Map<String, List<WhereBinding>> bindingMap = sqlContext.getBindingMap(FunType.WHERE);
+        FunVal funVal = funVals.get(0);
+        String group = funVal.getGroup();
+        if (Objects.isNull(bindingMap)) {
             return ParseCons.EMPTY_STR;
         }
 
-        List<WhereBinding> whereBindings = bindingInfoMap
+        List<WhereBinding> whereBindings = bindingMap
                 .values()
                 .stream()
-                .map(bindingInfo -> (WhereBinding) bindingInfo
-                ).filter(bindingInfo -> group.equals(bindingInfo.getGroup()))
+                .map(bindingInfo -> (WhereBinding) bindingInfo)
+                .filter(bindingInfo -> group.equals(bindingInfo.getGroup()))
                 .collect(Collectors.toList());
 
         if (whereBindings.size() != WHERE_BINDINGS_SIZE) {
@@ -64,11 +58,15 @@ public class WhereFun implements Function {
         if (StringUtils.isBlank(expression)) {
             return defaultParse(whereInfos);
         }
-        return parse(whereInfos, expression);
+        return parseFromExpression(whereInfos, expression);
     }
 
+    @Override
+    List<FunVal> genFunVals(Object[] params) {
+        return Collections.emptyList();
+    }
 
-    private String parse(List<WhereBinding.WhereInfo> whereInfos, String expression) {
+    private String parseFromExpression(List<WhereBinding.WhereInfo> whereInfos, String expression) {
         for (WhereBinding.WhereInfo whereInfo : whereInfos) {
             String id = whereInfo.getId();
             expression = expression.replace(id, "id-".concat(id));

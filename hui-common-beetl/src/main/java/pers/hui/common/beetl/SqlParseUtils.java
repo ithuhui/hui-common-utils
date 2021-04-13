@@ -11,9 +11,12 @@ import pers.hui.common.beetl.fun.*;
 import pers.hui.common.beetl.utils.ParseUtils;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * <code>SqlParseUtils</code>
@@ -68,16 +71,15 @@ public class SqlParseUtils {
      * @return
      * @throws IOException
      */
-    public static Map<String, FunVal> getFunValMap(String content) throws IOException {
+    public static List<Map<String, FunVal>> getFunValMap(String content) throws IOException {
         String contextNew = extractTextByRegex(content);
         GroupTemplate groupTemplate = groupTemplateInit();
 
         Template template = groupTemplate.getTemplate(contextNew);
         Context ctx = template.getCtx();
         template.render();
-        Map<FunType, SqlParseInfo> info = SqlContext.instance(ctx).getInfo();
-        SqlParseInfo sqlParseInfo = info.get(FunType.DIM);
-        return sqlParseInfo.getParseFunValMap();
+        Map<FunType, SqlParseInfo<Binding>> info = SqlContext.instance(ctx).getInfo();
+        return info.values().stream().map(SqlParseInfo::getParseFunValMap).collect(Collectors.toList());
     }
 
 
@@ -96,19 +98,23 @@ public class SqlParseUtils {
 
     /**
      * 动态路由的绑定
-     * @param template 模板
+     *
+     * @param template       模板
      * @param parseFunValMap 函数元信息
-     * @param dimBindingMap DIM绑定信息
+     * @param dimBindingMap  DIM绑定信息
      */
-    private static void remarkDynamicRoute(Template template, Map<String, FunVal> parseFunValMap, Map<String, Binding> dimBindingMap) {
-        parseFunValMap.values().forEach(val -> {
-            boolean isOutput = false;
-            if (dimBindingMap.containsKey(val.getKey())) {
-                isOutput = true;
-            }
-            String outputVal = ParseUtils.genOutPutVal(val);
-            template.binding(outputVal, isOutput);
-        });
+    private static void remarkDynamicRoute(Template template, List<Map<String, FunVal>> parseFunValMap, Map<String, List<Binding>> dimBindingMap) {
+        parseFunValMap.stream()
+                .map(Map::values)
+                .flatMap(Collection::stream)
+                .forEach(val -> {
+                    boolean isOutput = false;
+                    if (dimBindingMap.containsKey(val.getKey())) {
+                        isOutput = true;
+                    }
+                    String outputVal = ParseUtils.genOutPutVal(val);
+                    template.binding(outputVal, isOutput);
+                });
     }
 
 
@@ -119,7 +125,7 @@ public class SqlParseUtils {
     }
 
     public static String renderWithBinding(String content, BindingInfo bindingInfo) throws IOException {
-        Map<String, FunVal> funValMap = getFunValMap(content);
+        List<Map<String, FunVal>> funValMap = getFunValMap(content);
         GroupTemplate groupTemplate = groupTemplateInit();
         Template template = groupTemplate.getTemplate(content);
         SqlContext sqlContext = SqlContext.instance(template.getCtx());
@@ -131,24 +137,8 @@ public class SqlParseUtils {
     }
 
     private static void dataBinding(SqlContext sqlContext, BindingInfo bindingInfo) {
-        bindingInfo.getDimBindingInfos().forEach(binding -> {
-            FunType funType = FunType.DIM;
-            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
-        });
-        bindingInfo.getIncludeBaseBindings().forEach(binding -> {
-            FunType funType = FunType.INCLUDE_BASE;
-            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
-        });
-        bindingInfo.getIncludeGlobalValBindings().forEach(binding -> {
-            FunType funType = FunType.INCLUDE_GLOBAL_VAL;
-            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
-        });
-        bindingInfo.getKpiBindings().forEach(binding -> {
-            FunType funType = FunType.KPI;
-            sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
-        });
-        bindingInfo.getWhereBindings().forEach(binding -> {
-            FunType funType = FunType.WHERE;
+        bindingInfo.getBindings().forEach(binding -> {
+            FunType funType = binding.getFunType();
             sqlContext.binding(funType, funType.genKeyByBinding(binding), binding);
         });
     }

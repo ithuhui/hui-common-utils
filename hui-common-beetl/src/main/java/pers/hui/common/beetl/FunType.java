@@ -21,17 +21,11 @@ public enum FunType {
     /**
      * Include基础模板/变量模板
      */
-    INCLUDE_BASE(IncludeBinding.class){
+    INCLUDE(IncludeBinding.class){
         @Override
         String genKeyByBinding(Binding bindingInfo) {
             IncludeBinding binding = (IncludeBinding) bindingInfo;
             return ParseUtils.keyGen(binding.getCode());
-        }
-    },
-    INCLUDE_GLOBAL_VAL(IncludeBinding.class) {
-        @Override
-        String genKeyByBinding(Binding binding) {
-            return null;
         }
     },
     DIM(DimBinding.class) {

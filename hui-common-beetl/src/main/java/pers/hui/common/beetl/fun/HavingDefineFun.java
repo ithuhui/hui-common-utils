@@ -4,7 +4,6 @@ import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.HavingBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
 import java.util.Arrays;
@@ -20,14 +19,14 @@ import java.util.stream.Collectors;
  *
  * @author Gary.Hu
  */
-public class HavingDefineFun extends BaseSqlParseFun<HavingBinding> {
+public class HavingDefineFun extends BaseSqlParseFun {
     @Override
     FunType defineFunType() {
         return FunType.HAVING_DEFINE;
     }
 
     @Override
-    String parse(List<FunVal> funVals, SqlContext<HavingBinding> sqlContext) {
+    String parse(List<FunVal> funVals, SqlContext sqlContext) {
         return ParseCons.EMPTY_STR;
     }
 

@@ -4,7 +4,6 @@ import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.NullBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
 import java.util.Arrays;
@@ -21,14 +20,14 @@ import java.util.stream.Collectors;
  *
  * @author Gary.Hu
  */
-public class WhereDefineFun extends BaseSqlParseFun<NullBinding> {
+public class WhereDefineFun extends BaseSqlParseFun {
     @Override
     FunType defineFunType() {
         return FunType.WHERE_DEFINE;
     }
 
     @Override
-    String parse(List<FunVal> funVals, SqlContext<NullBinding> sqlContext) {
+    String parse(List<FunVal> funVals, SqlContext sqlContext) {
         return ParseCons.EMPTY_STR;
     }
 

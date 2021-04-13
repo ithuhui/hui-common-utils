@@ -1,7 +1,7 @@
 package pers.hui.common.beetl;
 
 import lombok.Data;
-import pers.hui.common.beetl.binding.*;
+import pers.hui.common.beetl.binding.Binding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +17,5 @@ import java.util.List;
  */
 @Data
 public class BindingInfo {
-    private List<DimBinding> dimBindingInfos = new ArrayList<>();
-    private List<IncludeBinding> includeBaseBindings = new ArrayList<>();
-    private List<IncludeBinding> includeGlobalValBindings = new ArrayList<>();
-    private List<KpiBinding> kpiBindings = new ArrayList<>();
-    private List<WhereBinding> whereBindings = new ArrayList<>();
+    private List<Binding> bindings = new ArrayList<>();
 }

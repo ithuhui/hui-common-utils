@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author Gary.Hu
  */
-public class KpiColFun extends BaseSqlParseFun<KpiBinding> {
+public class KpiColFun extends BaseSqlParseFun {
     private static final int ROUTE_OUTPUT_FLAG_LENGTH = 5;
     private static final int ROUTE_OUTPUT_FLAG_INDEX = 4;
 
@@ -30,7 +30,7 @@ public class KpiColFun extends BaseSqlParseFun<KpiBinding> {
     }
 
     @Override
-    String parse(List<FunVal> funVals, SqlContext<KpiBinding> sqlContext) {
+    String parse(List<FunVal> funVals, SqlContext sqlContext) {
         FunVal funVal = funVals.get(0);
         String key = funVal.getKey();
         Object[] params = funVal.getOriginVals();
@@ -38,11 +38,12 @@ public class KpiColFun extends BaseSqlParseFun<KpiBinding> {
             return ParseCons.EMPTY_STR;
         }
 
-        if (sqlContext.notNeededParse(FunType.DIM)) {
+        if (sqlContext.notNeededParse(FunType.KPI)) {
             return ParseCons.EMPTY_STR;
         }
 
-        List<KpiBinding> kpiBindings = sqlContext.getBindingMap(FunType.KPI).get(key);
+        List<KpiBinding> kpiBindings = sqlContext.getBindingMap(FunType.KPI, KpiBinding.class).get(key);
+
         if (null == kpiBindings || kpiBindings.isEmpty()) {
             return ParseCons.EMPTY_STR;
         }

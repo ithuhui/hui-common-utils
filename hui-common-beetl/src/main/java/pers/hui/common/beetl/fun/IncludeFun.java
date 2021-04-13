@@ -1,12 +1,12 @@
 package pers.hui.common.beetl.fun;
 
-import org.beetl.core.Context;
-import org.beetl.core.Function;
 import pers.hui.common.beetl.*;
 import pers.hui.common.beetl.binding.*;
 import pers.hui.common.beetl.utils.ParseUtils;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -14,91 +14,80 @@ import java.util.stream.Collectors;
  * <code>IncludeFun</code>
  * <desc>
  * 描述：include标签函数
+ * #{include("base","t_user")}
  * <desc/>
  * <b>Creation Time:</b> 2021/3/17 14:21.
  *
  * @author Gary.Hu
  */
-public class IncludeFun implements Function {
+public class IncludeFun extends BaseSqlParseFun {
     public static final String TEMPLATE_BASE = "base";
     public static final String TEMPLATE_GLOBAL_VAL = "global_val";
 
-    /**
-     * #{include("base","t_user")}
-     *
-     * @param params  参数
-     * @param context 模板上下文
-     * @return include进来的模板，需要解析完成的
-     */
     @Override
-    @SuppressWarnings("unchecked")
-    public Object call(Object[] params, Context context) {
-        SqlContext sqlContext = SqlContext.instance(context);
+    FunType defineFunType() {
+        return null;
+    }
+
+    @Override
+    String parse(List<FunVal> funVals, SqlContext sqlContext) {
+        FunVal funVal = funVals.get(0);
+        Object[] params = funVal.getOriginVals();
         String type = String.valueOf(params[0]);
-        String contentCode = String.valueOf(params[1]);
 
-        String key = ParseUtils.keyGen(contentCode);
-
+        if (sqlContext.notNeededParse(FunType.INCLUDE)) {
+            return ParseCons.EMPTY_STR;
+        }
+        // 全局变量的情况下 直接替换文本
+        if (type.equalsIgnoreCase(TEMPLATE_GLOBAL_VAL)) {
+            List<IncludeBinding> bindingInfos = sqlContext.getBindingInfo(FunType.INCLUDE, funVal.getKey(), IncludeBinding.class);
+            IncludeBinding includeBinding = bindingInfos.get(0);
+            return includeBinding.getIncludeContent();
+        }
 
         if (type.equalsIgnoreCase(TEMPLATE_BASE)) {
-            Map<String, Binding> bindingInfoMap = sqlContext.getBindingMap(FunType.INCLUDE_BASE);
-            IncludeBinding bindingInfo = (IncludeBinding) bindingInfoMap.get(ParseUtils.keyGen(contentCode));
-            // 保存标签函数值
-            FunVal funVal = FunVal.builder()
-                    .funType(FunType.INCLUDE_BASE)
-                    .code(contentCode)
-                    .key(key)
-                    .build();
-            sqlContext.addFunVal(FunType.INCLUDE_BASE, funVal);
-            if (sqlContext.notNeededParse(FunType.INCLUDE_BASE)) {
-                return ParseCons.EMPTY_STR;
-            }
-
+            List<IncludeBinding> bindingInfos = sqlContext.getBindingInfo(FunType.INCLUDE, funVal.getKey(), IncludeBinding.class);
+            IncludeBinding includeBinding = bindingInfos.get(0);
 
             try {
-                Map<String, FunVal> funValMap = SqlParseUtils.getFunValMap(bindingInfo.getIncludeContent());
+                List<Map<String, FunVal>> funValMap = SqlParseUtils.getFunValMap(includeBinding.getIncludeContent());
                 // 当发现标签函数的时候 需要重新进行解析
                 if (null != funValMap) {
-                    // 嵌套的include函数元信息记录
-                    funValMap.values().forEach(val -> sqlContext.addFunVal(val.getFunType(), val));
                     // 对嵌套的includeContent解析一次
-                    String parseV1 = parseWithFun(bindingInfo.getIncludeContent(), sqlContext);
-                    return parse(contentCode, parseV1);
+                    String parseV1 = parseWithFun(includeBinding.getIncludeContent(), sqlContext);
+                    return defaultParse(includeBinding.getCode(), parseV1);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 return ParseCons.EMPTY_STR;
             }
-            if (sqlContext.notNeededParse(FunType.INCLUDE_BASE)) {
-                return ParseCons.EMPTY_STR;
-            }
-            return parse(contentCode, bindingInfo.getIncludeContent());
-        }
 
-
-        // 全局变量的情况下 直接替换文本
-        if (type.equalsIgnoreCase(TEMPLATE_GLOBAL_VAL)) {
-            Map<String, Binding> bindingInfoMap = sqlContext.getBindingMap(FunType.INCLUDE_GLOBAL_VAL);
-            IncludeBinding bindingInfo = (IncludeBinding) bindingInfoMap.get(ParseUtils.keyGen(contentCode));
-            // 保存标签函数值
-            FunVal funVal = FunVal.builder()
-                    .funType(FunType.INCLUDE_GLOBAL_VAL)
-                    .code(contentCode)
-                    .key(key)
-                    .build();
-            sqlContext.addFunVal(FunType.INCLUDE_GLOBAL_VAL, funVal);
-            if (sqlContext.notNeededParse(FunType.INCLUDE_GLOBAL_VAL)) {
-                return ParseCons.EMPTY_STR;
-            }
-            return bindingInfo.getIncludeContent();
+            return defaultParse(includeBinding.getCode(), includeBinding.getIncludeContent());
         }
 
         return ParseCons.EMPTY_STR;
     }
 
-    private String parse(String code, String includeContent) {
+    private String defaultParse(String code, String includeContent) {
         return String.format("%s as ( %s )", code, includeContent);
     }
+
+
+    @Override
+    List<FunVal> genFunVals(Object[] params) {
+        String contentCode = String.valueOf(params[1]);
+        String key = ParseUtils.keyGen(contentCode);
+
+        FunVal funVal = FunVal.builder()
+                .funType(FunType.INCLUDE)
+                .code(contentCode)
+                .key(key)
+                .originVals(params)
+                .build();
+
+        return Collections.singletonList(funVal);
+    }
+
 
 
     /**
@@ -112,9 +101,10 @@ public class IncludeFun implements Function {
     private String parseWithFun(String includeContent, SqlContext sqlContext) {
 
         BindingInfo bindingInfo = new BindingInfo();
-        bindingInfo.setDimBindingInfos(sqlContext.getBindingMap(FunType.DIM).values().stream().map(x -> (DimBinding) x).collect(Collectors.toList()));
-        bindingInfo.setKpiBindings(sqlContext.getBindingMap(FunType.KPI).values().stream().map(x -> (KpiBinding) x).collect(Collectors.toList()));
-        bindingInfo.setWhereBindings(sqlContext.getBindingMap(FunType.WHERE).values().stream().map(x -> (WhereBinding) x).collect(Collectors.toList()));
+        List<Binding> bindings = bindingInfo.getBindings();
+        bindings.addAll(sqlContext.getBindingMap(FunType.DIM).values().stream().map(x -> (DimBinding) x).collect(Collectors.toList()));
+        bindings.addAll(sqlContext.getBindingMap(FunType.KPI).values().stream().map(x -> (KpiBinding) x).collect(Collectors.toList()));
+        bindings.addAll(sqlContext.getBindingMap(FunType.WHERE).values().stream().map(x -> (WhereBinding) x).collect(Collectors.toList()));
         try {
             return SqlParseUtils.renderWithBinding(includeContent, bindingInfo);
         } catch (IOException e) {

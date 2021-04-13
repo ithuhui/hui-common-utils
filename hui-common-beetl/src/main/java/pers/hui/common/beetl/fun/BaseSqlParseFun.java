@@ -5,7 +5,6 @@ import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.SqlContext;
-import pers.hui.common.beetl.binding.Binding;
 
 import java.util.List;
 
@@ -18,12 +17,12 @@ import java.util.List;
  *
  * @author Gary.Hu
  */
-public abstract class BaseSqlParseFun<T extends Binding> implements Function {
+public abstract class BaseSqlParseFun implements Function {
     private Object[] params;
-    private SqlContext<T> sqlContext;
+    private SqlContext sqlContext;
     private FunType funType;
 
-    public void init(SqlContext<T> sqlContext, Object[] params, FunType funType) {
+    public void init(SqlContext sqlContext, Object[] params, FunType funType) {
         this.sqlContext = sqlContext;
         this.params = params;
         this.funType = funType;
@@ -43,7 +42,7 @@ public abstract class BaseSqlParseFun<T extends Binding> implements Function {
      * @param sqlContext
      * @return
      */
-    abstract String parse(List<FunVal> funVals, SqlContext<T> sqlContext);
+    abstract String parse(List<FunVal> funVals, SqlContext sqlContext);
 
     /**
      * 构建方法元信息
@@ -61,7 +60,7 @@ public abstract class BaseSqlParseFun<T extends Binding> implements Function {
 
     @Override
     public Object call(Object[] params, Context context) {
-        SqlContext<T> sqlContext = SqlContext.instance(context);
+        SqlContext sqlContext = SqlContext.instance(context);
         init(sqlContext, params, defineFunType());
         List<FunVal> funVals = genFunVals(params);
         saveFunVals(funVals);

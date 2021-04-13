@@ -4,6 +4,7 @@ import org.beetl.core.Context;
 import pers.hui.common.beetl.binding.Binding;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <code>SqlContext</code>
@@ -14,7 +15,7 @@ import java.util.*;
  *
  * @author Ken.Hu
  */
-public class SqlContext<T extends Binding> {
+public class SqlContext {
     private final Context context;
     private static SqlContext instance;
 
@@ -36,9 +37,9 @@ public class SqlContext<T extends Binding> {
      * @return SQL解析信息
      */
     @SuppressWarnings("unchecked")
-    public Map<FunType, SqlParseInfo<T>> getInfo() {
-        Map<FunType, SqlParseInfo<T>> sqlParseInfoMap = (Map<FunType, SqlParseInfo<T>>) this.context.gt.getSharedVars().putIfAbsent(ParseCons.INFO, new HashMap<FunType, SqlParseInfo<T>>());
-        return null == sqlParseInfoMap ? (Map<FunType, SqlParseInfo<T>>) this.context.gt.getSharedVars().get(ParseCons.INFO) : sqlParseInfoMap;
+    public Map<FunType, SqlParseInfo<Binding>> getInfo() {
+        Map<FunType, SqlParseInfo<Binding>> sqlParseInfoMap = (Map<FunType, SqlParseInfo<Binding>>) this.context.gt.getSharedVars().putIfAbsent(ParseCons.INFO, new HashMap<FunType, SqlParseInfo<Binding>>());
+        return null == sqlParseInfoMap ? (Map<FunType, SqlParseInfo<Binding>>) this.context.gt.getSharedVars().get(ParseCons.INFO) : sqlParseInfoMap;
     }
 
     /**
@@ -47,8 +48,8 @@ public class SqlContext<T extends Binding> {
      * @param funType 标签函数类型
      * @return sql解析信息
      */
-    public SqlParseInfo<T> getParseInfo(FunType funType) {
-        SqlParseInfo<T> sqlParseInfo = getInfo().putIfAbsent(funType, new SqlParseInfo<T>());
+    public SqlParseInfo<Binding> getParseInfo(FunType funType) {
+        SqlParseInfo<Binding> sqlParseInfo = getInfo().putIfAbsent(funType, new SqlParseInfo<>());
         return null == sqlParseInfo ? getInfo().get(funType) : sqlParseInfo;
     }
 
@@ -59,10 +60,20 @@ public class SqlContext<T extends Binding> {
      * @param funType 标签函数类型
      * @return 绑定信息 key: 唯一标识 val: 绑定信息
      */
-    public Map<String, List<T>> getBindingMap(FunType funType) {
-        return getParseInfo(funType).getBindingMap();
+    public <T extends Binding> Map<String, List<T>> getBindingMap(FunType funType,Class<T> type) {
+        SqlParseInfo<Binding> parseInfo = getParseInfo(funType);
+        Map<String, List<Binding>> bindingMap = parseInfo.getBindingMap();
+        HashMap<String, List<T>> hashMap = new HashMap<>(bindingMap.size());
+        bindingMap.forEach((k,v)->{
+            List<T> collect = v.stream().map(type::cast).collect(Collectors.toList());
+            hashMap.putIfAbsent(k,collect);
+        });
+        return hashMap;
     }
 
+    public Map<String, List<Binding>> getBindingMap(FunType funType) {
+        return getParseInfo(funType).getBindingMap();
+    }
 
     /**
      * 获取绑定信息
@@ -71,8 +82,9 @@ public class SqlContext<T extends Binding> {
      * @param key     唯一标识
      * @return 绑定信息
      */
-    public List<T> getBindingInfo(FunType funType, String key) {
-        return getParseInfo(funType).getBindingMap().get(key);
+    public <T> List<T> getBindingInfo(FunType funType, String key , Class<T> type) {
+        List<Binding> bindings = getParseInfo(funType).getBindingMap().get(key);
+        return bindings.stream().map(type::cast).collect(Collectors.toList());
     }
 
     /**
@@ -103,8 +115,8 @@ public class SqlContext<T extends Binding> {
      * @param key     为一标识
      * @param binding 绑定信息值
      */
-    public void binding(FunType funType, String key, T binding) {
-        List<T> bindingList = getBindingMap(funType).putIfAbsent(key, Collections.singletonList(binding));
+    public void binding(FunType funType, String key, Binding binding) {
+        List bindingList = getBindingMap(funType).putIfAbsent(key, Collections.singletonList(binding));
         if (null == bindingList) {
             getBindingMap(funType).get(key).add(binding);
         }
@@ -123,23 +135,12 @@ public class SqlContext<T extends Binding> {
     }
 
     /**
-     * 绑定解析完后的值
-     *
-     * @param funType     标签函数类型
-     * @param key         唯一标识
-     * @param parseResult 转换结果
-     */
-    public void setParseVal(FunType funType, String key, String parseResult) {
-        getParseFunValMap(funType).get(key).setParseVal(parseResult);
-    }
-
-    /**
      * 判断是否需要转换
      *
      * @param funType 标签函数类型
      * @return 是否需要转换
      */
-    public boolean notNeededParse(FunType funType) {
+    public <T> boolean notNeededParse(FunType funType) {
         return null == getBindingMap(funType) || getBindingMap(funType).size() == 0;
     }
 }

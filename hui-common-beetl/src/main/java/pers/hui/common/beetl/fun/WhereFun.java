@@ -7,10 +7,7 @@ import pers.hui.common.beetl.ParseCons;
 import pers.hui.common.beetl.SqlContext;
 import pers.hui.common.beetl.binding.WhereBinding;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +19,7 @@ import java.util.stream.Collectors;
  *
  * @author Ken.Hu
  */
-public class WhereFun extends BaseSqlParseFun<WhereBinding> {
+public class WhereFun extends BaseSqlParseFun {
 
     private static final int WHERE_BINDINGS_SIZE = 1;
 
@@ -32,8 +29,8 @@ public class WhereFun extends BaseSqlParseFun<WhereBinding> {
     }
 
     @Override
-    String parse(List<FunVal> funVals, SqlContext<WhereBinding> sqlContext) {
-        Map<String, List<WhereBinding>> bindingMap = sqlContext.getBindingMap(FunType.WHERE);
+    String parse(List<FunVal> funVals, SqlContext sqlContext) {
+        Map<String, List<WhereBinding>> bindingMap = sqlContext.getBindingMap(FunType.WHERE,WhereBinding.class);
         FunVal funVal = funVals.get(0);
         String group = funVal.getGroup();
         if (Objects.isNull(bindingMap)) {
@@ -43,7 +40,7 @@ public class WhereFun extends BaseSqlParseFun<WhereBinding> {
         List<WhereBinding> whereBindings = bindingMap
                 .values()
                 .stream()
-                .map(bindingInfo -> (WhereBinding) bindingInfo)
+                .flatMap(Collection::stream)
                 .filter(bindingInfo -> group.equals(bindingInfo.getGroup()))
                 .collect(Collectors.toList());
 

@@ -1,7 +1,5 @@
 package pers.hui.common.beetl.fun;
 
-import org.beetl.core.Context;
-import org.beetl.core.Function;
 import pers.hui.common.beetl.FunType;
 import pers.hui.common.beetl.FunVal;
 import pers.hui.common.beetl.ParseCons;
@@ -9,6 +7,7 @@ import pers.hui.common.beetl.SqlContext;
 import pers.hui.common.beetl.binding.DimBinding;
 import pers.hui.common.beetl.utils.ParseUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,27 +19,48 @@ import java.util.stream.Collectors;
  * 1. 支持 caseWhen
  * 2. 支持嵌套caseWhen
  * 流程： 查询模板勾选字段分层
+ *  #{ dim("user_id","用户id","t1.user_id","sqla",true)} %>
  * <desc/>
  * <b>Creation Time:</b> 2021/3/17 11:30.
  *
  * @author Gary.Hu
  */
-public class DimColFun implements Function {
+public class DimColFun extends BaseSqlParseFun{
 
     private static final int ROUTE_OUTPUT_FLAG_LENGTH = 5;
     private static final int ROUTE_OUTPUT_FLAG_INDEX = 4;
 
 
-    /**
-     * #{ dim("user_id","用户id","t1.user_id","sqla",true)} %>
-     *
-     * @param params  入参列表
-     * @param context 模板上下文
-     * @return 解析后的内容
-     */
     @Override
-    public Object call(Object[] params, Context context) {
-        SqlContext sqlContext = SqlContext.instance(context);
+    FunType defineFunType() {
+        return FunType.DIM;
+    }
+
+    @Override
+    String parse(List<FunVal> funVals, SqlContext sqlContext) {
+        FunVal funVal = funVals.get(0);
+        Object[] params = funVal.getOriginVals();
+        if (!needOutput(params)) {
+            return ParseCons.EMPTY_STR;
+        }
+
+        if (sqlContext.notNeededParse(FunType.DIM)) {
+            return ParseCons.EMPTY_STR;
+        }
+        DimBinding dimBinding = (DimBinding) sqlContext.getBindingMap(FunType.DIM).get(funVal.getKey());
+        if (null == dimBinding){
+            return ParseCons.EMPTY_STR;
+        }
+        DimBinding.CaseWhenBinding caseWhenBinding = dimBinding.getCaseWhenBinding();
+        if (null == caseWhenBinding) {
+            return funVal.getVal().concat(",");
+        }
+        // 保存解析后的值
+        return recursion(caseWhenBinding).concat(",");
+    }
+
+    @Override
+    List<FunVal> genFunVals(Object[] params) {
         String code = String.valueOf(params[0]);
         String comment = String.valueOf(params[1]);
         String val = String.valueOf(params[2]);
@@ -56,18 +76,7 @@ public class DimColFun implements Function {
                 .group(group)
                 .build();
 
-        sqlContext.addFunVal(FunType.DIM, funVal);
-
-        if (!needOutput(params)) {
-            return ParseCons.EMPTY_STR;
-        }
-
-        if (sqlContext.notNeededParse(FunType.DIM)) {
-            return ParseCons.EMPTY_STR;
-        }
-        String parseResult = parse(sqlContext, funVal);
-        sqlContext.setParseVal(FunType.DIM, funVal.getKey(), parseResult);
-        return parseResult;
+        return Collections.singletonList(funVal);
     }
 
     /**
@@ -83,27 +92,6 @@ public class DimColFun implements Function {
             isOutput = (Boolean) params[ROUTE_OUTPUT_FLAG_INDEX];
         }
         return isOutput;
-    }
-
-
-    /**
-     * dim字段解析
-     *
-     * @param sqlContext
-     * @param funVal
-     * @return
-     */
-    private String parse(SqlContext sqlContext, FunVal funVal) {
-        DimBinding dimBinding = (DimBinding) sqlContext.getBindingMap(FunType.DIM).get(funVal.getKey());
-        if (null == dimBinding){
-            return ParseCons.EMPTY_STR;
-        }
-        DimBinding.CaseWhenBinding caseWhenBinding = dimBinding.getCaseWhenBinding();
-        if (null == caseWhenBinding) {
-            return funVal.getVal().concat(",");
-        }
-        // 保存解析后的值
-        return recursion(caseWhenBinding).concat(",");
     }
 
     /**

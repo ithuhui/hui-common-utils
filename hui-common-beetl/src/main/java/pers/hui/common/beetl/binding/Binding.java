@@ -1,5 +1,6 @@
 package pers.hui.common.beetl.binding;
 
+import lombok.Data;
 import pers.hui.common.beetl.FunType;
 
 /**
@@ -11,6 +12,7 @@ import pers.hui.common.beetl.FunType;
  *
  * @author Ken.Hu
  */
+@Data
 public abstract class Binding {
     private FunType funType;
 }
